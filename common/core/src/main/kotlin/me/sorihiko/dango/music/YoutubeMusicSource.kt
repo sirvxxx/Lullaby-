@@ -15,8 +15,6 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import me.sorihiko.dango.DangoLogger
 import me.sorihiko.dango.lyrics.Lyrics
-import java.net.HttpURLConnection
-import java.net.URL
 import org.schabi.newpipe.extractor.NewPipe
 import org.schabi.newpipe.extractor.ServiceList
 import org.schabi.newpipe.extractor.MediaFormat
