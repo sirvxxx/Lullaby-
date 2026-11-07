@@ -122,7 +122,7 @@ internal class PlayerBar(private val screen: MusicScreen, private val module: Ne
             val likeB = LayoutBounds(infoX + infoW + 8f, coverBox.y + cs / 2f - 14f, 28f, 28f)
             val k = button(likeB, likeA)
             val on = likeA.on.tick(if (NeteaseApi.isLiked(t.id)) 1f else 0f).coerceIn(0f, 1f)
-            ui.icon("♥", likeB.x + 14f, likeB.y + 14f, 15f * k, mixColor(Theme.TEXT_SECONDARY, RED, on))
+            ui.icon("♥", likeB.x + 14f, likeB.y + 14f, 15f * k, mixColor(Theme.TEXT_SECONDARY, LOVE, on))
             ui.hits += likeB to { likeA.press.v -= 7f; Library.toggleLike(t) }
         }
 

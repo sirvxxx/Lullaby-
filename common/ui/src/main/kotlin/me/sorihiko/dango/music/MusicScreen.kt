@@ -506,7 +506,7 @@ class MusicScreen(
                 val rec = Library.recommend
                 val items = if (rec.isNullOrEmpty()) Library.playlists else rec
                 val label = if (rec.isNullOrEmpty()) I18n.text("Your playlists") else I18n.text("Recommended playlists")
-                grid.draw(body, I18n.text("Welcome to Lullaby+!"), "$label · ${items.size}", items, Library.recommendLoading && items.isEmpty())
+                grid.draw(body, I18n.text("Welcome to LULLABY+!"), "$label · ${items.size}", items, Library.recommendLoading && items.isEmpty())
             }
             Page.CHARTS -> {
                 val c = Library.charts ?: emptyList()

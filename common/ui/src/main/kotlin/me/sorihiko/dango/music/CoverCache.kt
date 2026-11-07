@@ -32,6 +32,8 @@ object CoverCache {
     private const val MAX_SOURCES = 400
     /** 最近这么久（毫秒）里画过的封面算"正在用"，超出上限也不删 */
     private const val IN_USE_MS = 500L
+    /** 5 menit tidak dipakai = tekstur dilepas dari VRAM (gambar tetap di RAM) */
+    private const val PURGE_MS = 5 * 60 * 1000L
     /** 每次 upload() 最多上传几张 */
     private const val UPLOADS_PER_CALL = 8
     /**
@@ -85,6 +87,18 @@ object CoverCache {
             roundQueued.remove(eldest.key)
             lastUsed.remove(eldest.key)
             textures.remove(eldest.key)
+        }
+        // 5 menit tidak dipakai: lepas dari VRAM. Gambarnya masih di `sources`, jadi kalau dipakai lagi
+        // get() cukup mengunggah ulang dari RAM (tidak download ulang).
+        val iter = textures.entries.iterator()
+        while (iter.hasNext()) {
+            val e = iter.next()
+            if (now - (lastUsed[e.key] ?: 0L) < PURGE_MS) continue
+            DangoClient.gfx.textures.delete(e.value)
+            requested.remove(e.key)
+            roundQueued.remove(e.key)
+            lastUsed.remove(e.key)
+            iter.remove()
         }
     }
 

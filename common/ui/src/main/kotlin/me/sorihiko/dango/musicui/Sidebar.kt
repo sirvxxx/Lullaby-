@@ -175,13 +175,11 @@ internal class Sidebar(private val screen: MusicScreen) {
             y += 32f
         }
 
-        section("DANGO MUSIC")
+        section("LULLABY+")
         nav("⌂", I18n.text("Home"), page == Page.HOME, true) { screen.go(Page.HOME) }
         section(I18n.text("DISCOVER"))
         nav("▤", I18n.text("Charts"), page == Page.CHARTS, false) { screen.go(Page.CHARTS) }
         nav("♫", I18n.text("Now Playing"), page == Page.QUEUE, false) { screen.go(Page.QUEUE) }
-        nav("♬", if (ListenParty.role == ListenParty.Role.NONE) I18n.text("Listen Together") else I18n.text("Listen Together · ") + ListenParty.members.size,
-            page == Page.PARTY, ListenParty.role != ListenParty.Role.NONE) { screen.go(Page.PARTY) }
         val netease = MusicSources.selected == MusicSource.NETEASE
         val playlists = Library.playlists
         // 云盘是固定入口，不跟着歌单滚动；列表未加载完时也允许直接打开。
@@ -225,7 +223,7 @@ internal class Sidebar(private val screen: MusicScreen) {
             // 歌单封面的小缩略图；"我喜欢的音乐"和还没加载出封面的照旧画图标
             val thumb = if (liked || p.coverUrl.isEmpty()) null else CoverCache.playlistRounded(p, 0.25f)
             if (thumb != null) ui.drawCover(LayoutBounds(row.x + 9f, row.y + 5f, 18f, 18f), thumb)
-            else ui.icon(if (liked) "♥" else "≡", row.x + 18f, row.y + 14f, 12f, if (liked || active) RED else Theme.TEXT_SECONDARY)
+            else ui.icon(if (liked) "♥" else "≡", row.x + 18f, row.y + 14f, 12f, if (liked) LOVE else if (active) RED else Theme.TEXT_SECONDARY)
             val c = if (active) Theme.TEXT_PRIMARY else if (p.owned) Theme.TEXT_PRIMARY else Theme.TEXT_SECONDARY
             ui.text(ui.trim(p.name, row.right - 8f - (row.x + 34f), 12f), row.x + 34f, row.y + 9f, 12f, c)
             ui.hits += row.intersect(listShown) to { screen.openPlaylist(p, null) }

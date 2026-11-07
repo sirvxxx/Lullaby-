@@ -267,7 +267,10 @@ internal class SettingsPage(private val screen: MusicScreen, private val module:
         for (k in listOf("windowX", "windowY", "windowW", "windowH")) player.left.remove(k) // 拖窗口边缘改，不在设置里显示
         if (!DangoMusic.instance.platform.hasGameAudio) player.left.remove("audioOutput") // 1.8.9 只有 Java Sound
         val card = Src(mm.get(SongCardModule::class.java), fmts = mapOf("posX" to ::percent, "posY" to ::percent))
-        val island = Src(mm.get(DynamicIslandModule::class.java), fmts = mapOf("notifyTime" to { v: Any -> "%.1f s".format((v as FloatValue).value) }))
+        val island = Src(mm.get(DynamicIslandModule::class.java), fmts = mapOf(
+            "notifyTime" to { v: Any -> "%.1f s".format((v as FloatValue).value) },
+            "position" to { v: Any -> arrayOf("Top center", "Bottom center", "Left side", "Right side")[(v as IntValue).value] },
+        ))
         // 先取走，免得落进下面的 Hotkeys 组
         val updates = player.take(listOf("checkUpdates"))
         val environment = player.take(listOf("envAudio", "envRain", "envStrength", "envRays"))

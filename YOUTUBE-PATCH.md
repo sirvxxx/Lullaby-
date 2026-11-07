@@ -48,3 +48,6 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Settings > Player > "Fast glass": saklar global untuk mode potato (blur kaca dimatikan, throttle pengambilan latar, Deep Glow dimatikan). Satu-satunya penulis Performance.lowEnd sekarang NeteaseMusicModule. Low-end mode di modul Lyrics hanya mematikan Deep Glow.
 - Settings > Player > "Blur resolution" (1x, 0.5x, 0.25x): memperkecil buffer blur kaca (soft dan frost). Buffer di-resize ulang saat pengaturan berubah.
 - Perbaikan build: import java.net.HttpURLConnection dan URL di YoutubeMusicSource.kt sebelumnya dobel (ambiguous). Sudah dihapus.
+- Rebrand tampilan: nama "LULLABY+" (sidebar, judul, update, mod list). Warna aksen pink diganti silver (RED = #9AA4B6), hati tetap pink (LOVE). Entri Listen Together dihapus dari sidebar.
+- Cache cover: tekstur yang 5 menit tidak dipakai dilepas dari VRAM (gambar tetap di RAM).
+- Dynamic Island: pengaturan Position (atas tengah, bawah tengah, sisi kiri, sisi kanan), Offset X, dan Offset Y. Mode sisi (vertikal) menampilkan cover di atas, judul dan artis di bawah, serta progres di bawah. Teks belum diputar 90° (GuiCanvas belum punya rotasi teks), dan Z-index belum ada.

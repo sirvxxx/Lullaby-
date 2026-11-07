@@ -17,7 +17,7 @@ import java.nio.file.Path
 class DangoMusic private constructor(val platform: Platform) {
     companion object {
         const val MOD_ID = "lullaby"
-        const val NAME = "Lullaby+"
+        const val NAME = "LULLABY+"
 
         lateinit var instance: DangoMusic
             private set

@@ -14,6 +14,7 @@ import me.sorihiko.dango.module.Module
 import me.sorihiko.dango.module.ModuleMeta
 import me.sorihiko.dango.module.values.BooleanValue
 import me.sorihiko.dango.module.values.FloatValue
+import me.sorihiko.dango.module.values.IntValue
 import me.sorihiko.dango.module.values.ModuleValue
 import me.sorihiko.dango.music.CoverCache
 import me.sorihiko.dango.music.MusicPlayer
@@ -56,6 +57,33 @@ class DynamicIslandModule : Module() {
 
     @ModuleValue("Notify time", "How long song notifications stay (seconds)")
     private val notifyTime = FloatValue(1f, 8f, 3.5f, 1)
+
+    /** 0 = atas tengah, 1 = bawah tengah, 2 = sisi kiri (vertikal), 3 = sisi kanan (vertikal) */
+    @ModuleValue("Position", "Top center, bottom center, left side or right side (side = vertical layout)")
+    private val position = IntValue(0, 3, 0)
+
+    @ModuleValue("Offset X", "Move the island sideways, in pixels")
+    private val offsetX = IntValue(-400, 400, 0)
+
+    @ModuleValue("Offset Y", "Move the island up or down, in pixels")
+    private val offsetY = IntValue(-400, 400, 0)
+
+    private fun vertical() = position.value >= 2
+
+    /** Ukuran yang dipakai: di sisi layar lebarnya dan tingginya ditukar (pil berdiri tegak) */
+    private fun dims(kind: Kind): Pair<Float, Float> = sizeOf(kind).let { (w0, h0) -> if (vertical()) h0 to w0 else w0 to h0 }
+
+    private fun pillPosition(lw: Float, lh: Float, edge: Float, margin: Float): LayoutBounds {
+        val x: Float
+        val y: Float
+        when (position.value) {
+            1 -> { x = (lw - w) / 2f; y = lh - h - edge }
+            2 -> { x = margin; y = (lh - h) / 2f }
+            3 -> { x = lw - w - margin; y = (lh - h) / 2f }
+            else -> { x = (lw - w) / 2f; y = edge }
+        }
+        return LayoutBounds(x + offsetX.value, y + offsetY.value, w, h)
+    }
 
     private enum class Kind { IDLE, SONG, UPDATE }
 
@@ -214,7 +242,7 @@ class DynamicIslandModule : Module() {
         }
 
         // 弹簧：略带回弹，接近 iOS 灵动岛的手感
-        val (tw, th) = sizeOf(want)
+        val (tw, th) = dims(want)
         val stiff = 230f
         val damp = 24f
         vw += ((tw - w) * stiff - vw * damp) * dt
@@ -232,7 +260,8 @@ class DynamicIslandModule : Module() {
             val lw = platform.windowWidth / k
             val sf = platform.guiScale
             val top = 18f * sf / k                       // 和原来一样，留出 Boss 血条的位置
-            val pill = LayoutBounds((lw - w) / 2f, top, w, h)
+            val lh = platform.windowHeight / k
+            val pill = pillPosition(lw, lh, top, 14f * sf / k)
             val r = min(h / 2f, 22f)
 
             ctx.pushScale(k, k, 1f)
@@ -249,7 +278,7 @@ class DynamicIslandModule : Module() {
             }
 
             // 内容按目标尺寸排版，在当前胶囊里居中，超出部分裁掉
-            val (cw, ch) = sizeOf(shown)
+            val (cw, ch) = dims(shown)
             val cb = LayoutBounds(pill.x + (w - cw) / 2f, pill.y + (h - ch) / 2f, cw, ch)
             val scX = (pill.x * k).toInt()
             val scY = (platform.windowHeight - (pill.y + h) * k).toInt()
@@ -260,7 +289,7 @@ class DynamicIslandModule : Module() {
             ctx.pushOpacity(contentAlpha)
             when (shown) {
                 Kind.IDLE -> if (musicIdle()) drawMusicIdle(ctx, cb) else drawIdle(ctx, cb)
-                Kind.SONG -> drawSong(ctx, cb)
+                Kind.SONG -> if (vertical()) drawSongVertical(ctx, cb) else drawSong(ctx, cb)
                 Kind.UPDATE -> drawUpdate(ctx, cb)
             }
             ctx.popOpacity()
@@ -300,7 +329,7 @@ class DynamicIslandModule : Module() {
         bars(ctx, b.right - 12f - 14f, b.y + 22f, playing, 11f)
     }
 
-    private fun updateTitle() = I18n.text("Lullaby+ update: ") + (UpdateChecker.available?.version ?: "")
+    private fun updateTitle() = I18n.text("LULLABY+ update: ") + (UpdateChecker.available?.version ?: "")
 
     private fun drawUpdate(ctx: GuiCanvas, b: LayoutBounds) {
         ctx.drawShape(LayoutBounds(b.x + 16f, b.y + 22f, 8f, 8f), ShapeStyle(Theme.ACCENT, 4f))
@@ -329,6 +358,26 @@ class DynamicIslandModule : Module() {
         text(ctx, trim(t.artists.joinToString(" / "), tw, 11f), tx, b.y + 42f, 11f, Theme.TEXT_SECONDARY)
 
         val bar = LayoutBounds(tx, b.y + 60f, tw, 3f)
+        ctx.drawShape(bar, ShapeStyle(Theme.TRACK, 1.5f))
+        val dur = MusicPlayer.durationMs
+        if (dur > 0) {
+            val f = (MusicPlayer.positionMs.toDouble() / dur).coerceIn(0.0, 1.0).toFloat()
+            ctx.drawShape(LayoutBounds(bar.x, bar.y, max(3f, bar.width * f), bar.height), ShapeStyle(Theme.TEXT_PRIMARY, 1.5f))
+        }
+    }
+
+    /** Mode vertikal (sisi layar): cover di atas, judul dan artis di bawahnya, progres di bawah */
+    private fun drawSongVertical(ctx: GuiCanvas, b: LayoutBounds) {
+        val t = MusicPlayer.current ?: return
+        val size = minOf(b.width - 14f, 52f)
+        val cover = LayoutBounds(b.x + (b.width - size) / 2f, b.y + 10f, size, size)
+        drawCover(ctx, cover, CoverCache.trackRounded(t) ?: CoverCache.track(t))
+        val tx = b.x + 6f
+        val tw = b.width - 12f
+        val ty = cover.bottom + 8f
+        text(ctx, trim(t.name, tw, 10f, Theme.FONT_SEMIBOLD), tx, ty, 10f, Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
+        text(ctx, trim(t.artists.firstOrNull().orEmpty(), tw, 9f), tx, ty + 14f, 9f, Theme.TEXT_SECONDARY)
+        val bar = LayoutBounds(tx, b.bottom - 12f, tw, 3f)
         ctx.drawShape(bar, ShapeStyle(Theme.TRACK, 1.5f))
         val dur = MusicPlayer.durationMs
         if (dur > 0) {
