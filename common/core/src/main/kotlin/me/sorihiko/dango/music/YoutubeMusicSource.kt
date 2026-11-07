@@ -58,6 +58,12 @@ object YoutubeMusicSource : MusicSourceApi {
         else -> emptyList()
     }
 
+    /** Home: lagu trending (diacak setiap dipanggil) */
+    fun trendingTracks(): List<NeteaseTrack> = playlistTracks(TRENDING_ID)
+
+    /** Charts: lagu chart YouTube Music (urutan asli) */
+    fun chartTracksNow(): List<NeteaseTrack> = playlistTracks(CHARTS_ID)
+
     @Synchronized private fun chartTracks(): List<NeteaseTrack> {
         val now = System.currentTimeMillis()
         chartCache?.let { if (now - it.first < CACHE_MS) return it.second }

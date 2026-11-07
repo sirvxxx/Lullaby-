@@ -51,3 +51,6 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Rebrand tampilan: nama "LULLABY+" (sidebar, judul, update, mod list). Warna aksen pink diganti silver (RED = #9AA4B6), hati tetap pink (LOVE). Entri Listen Together dihapus dari sidebar.
 - Cache cover: tekstur yang 5 menit tidak dipakai dilepas dari VRAM (gambar tetap di RAM).
 - Dynamic Island: pengaturan Position (atas tengah, bawah tengah, sisi kiri, sisi kanan), Offset X, dan Offset Y. Mode sisi (vertikal) menampilkan cover di atas, judul dan artis di bawah, serta progres di bawah. Teks belum diputar 90° (GuiCanvas belum punya rotasi teks), dan Z-index belum ada.
+- Dynamic Island mode samping: pil tetap 84x150, cover 48px rata tengah, judul dan artis rata tengah, audio visualizer rata tengah di bawah teks, progres tipis di bawah.
+- GUI tahap 1 (sesuai mockup): sidebar berisi logo LULLABY+, Home, Charts, Now Playing, Playlist. Daftar playlist dan cloud drive pindah ke halaman Playlist (grid). Page baru: PLAYLISTS.
+- GUI tahap 2-4: Now Playing (antrean kiri, lima tombol bulat di bawah, cover + kotak judul + panel lirik kanan). Home: lagu trending YouTube diacak tiap dibuka, grid 5 kolom. Charts: "Trending Music" dengan garis aksen, grid lagu chart urut. Lirik diambil lewat sumber lagu (LRCLIB/NetEase). File baru: musicui/TrackPages.kt.

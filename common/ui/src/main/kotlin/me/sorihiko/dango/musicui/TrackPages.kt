@@ -1,0 +1,194 @@
+package me.sorihiko.dango.musicui
+
+import me.sorihiko.dango.DangoMusic
+import me.sorihiko.dango.i18n.I18n
+import me.sorihiko.dango.module.impls.music.NeteaseMusicModule
+import me.sorihiko.dango.music.CoverCache
+import me.sorihiko.dango.music.MusicPlayer
+import me.sorihiko.dango.music.MusicScreen
+import me.sorihiko.dango.music.NeteaseTrack
+import me.sorihiko.dango.ui.LayoutBounds
+import me.sorihiko.dango.ui.Theme
+import kotlin.math.max
+
+/** Home & Charts: grid lagu 5 kolom. Kartu = cover persegi + nama + artis (sesuai mockup). */
+internal class TrackCardGrid(private val screen: MusicScreen) {
+    private val ui = screen.ui
+
+    /** area grid yang sedang digambar (untuk scroll mouse) */
+    var area = LayoutBounds()
+    private var target = 0f
+    private var pos = 0f
+    private var maxScroll = 0f
+
+    fun tick() {
+        pos = ui.approach(pos, target, 70f)
+    }
+
+    fun resetScroll() {
+        target = 0f
+        pos = 0f
+    }
+
+    fun scroll(wheel: Int) {
+        target = (target + (if (wheel > 0) -120f else 120f)).coerceIn(0f, maxScroll)
+    }
+
+    fun draw(body: LayoutBounds, title: String, sub: String, tracks: List<NeteaseTrack>, loading: Boolean, accent: Boolean) {
+        ui.headerAnim {
+            ui.text(title, body.x, body.y, 22f, Theme.TEXT_PRIMARY, Theme.FONT_DISPLAY)
+            ui.text(if (loading) I18n.text("Loading...") else sub, body.x, body.y + 30f, 11f, Theme.TEXT_SECONDARY, Theme.FONT_SEMIBOLD)
+            if (accent) ui.card(LayoutBounds(body.x, body.y + 50f, 120f, 2f), Theme.ACCENT, 1f)
+        }
+        val top = body.y + (if (accent) 66f else 56f)
+        val cols = 5
+        val gap = 16f
+        val cw = (body.width - gap * (cols - 1)) / cols
+        val rowH = cw + 46f
+        val gridArea = LayoutBounds(body.x, top, body.width, body.bottom - top)
+        area = gridArea
+        val rows = (tracks.size + cols - 1) / cols
+        maxScroll = max(0f, rows * rowH - gridArea.height)
+
+        if (tracks.isEmpty() && !loading) {
+            ui.text(I18n.text("No songs yet"), body.x, top + 4f, 12f, Theme.TEXT_TERTIARY)
+            return
+        }
+        ui.beginClip(gridArea)
+        for ((i, t) in tracks.withIndex()) {
+            val r = i / cols
+            val c = i % cols
+            val x = body.x + c * (cw + gap)
+            val y = top + r * rowH - pos
+            if (y + rowH < gridArea.y || y > gridArea.bottom) continue
+            val card = LayoutBounds(x, y, cw, rowH)
+            if (ui.hover(card)) ui.card(LayoutBounds(x - 4f, y - 4f, cw + 8f, rowH + 4f), Theme.CARD_HOVER, 12f)
+            ui.drawCover(LayoutBounds(x, y, cw, cw), CoverCache.track(t), 8f)
+            ui.text(ui.trim(t.name, cw, 12f, Theme.FONT_SEMIBOLD), x + 2f, y + cw + 8f, 12f, Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
+            ui.text(ui.trim(t.artists.firstOrNull().orEmpty(), cw, 10f), x + 2f, y + cw + 24f, 10f, Theme.TEXT_SECONDARY)
+            val list = tracks
+            ui.hits += card.intersect(gridArea) to { MusicPlayer.playQueue(list, i) }
+        }
+        ui.endClip()
+    }
+}
+
+/** Now Playing (mockup): antrean di kiri + tombol bulat di bawah; cover, judul, dan lirik di kanan. */
+internal class NowPlayingPage(private val screen: MusicScreen) {
+    private val ui = screen.ui
+
+    fun draw(body: LayoutBounds) {
+        val gap = 20f
+        val leftW = body.width * 0.36f
+        val left = LayoutBounds(body.x, body.y, leftW, body.height)
+        val rightX = body.x + leftW + gap
+        val right = LayoutBounds(rightX, body.y, body.right - rightX, body.height)
+        drawQueue(left)
+        drawPanel(right)
+    }
+
+    private fun drawQueue(area: LayoutBounds) {
+        val controlsH = 66f
+        val list = LayoutBounds(area.x, area.y, area.width, area.height - controlsH)
+        val q = MusicPlayer.queue
+        val cur = MusicPlayer.current
+        val rowH = 46f
+        ui.beginClip(list)
+        for ((i, t) in q.withIndex()) {
+            val row = LayoutBounds(list.x, list.y + i * (rowH + 4f), list.width, rowH)
+            if (row.y > list.bottom) break
+            val active = cur != null && t.key == cur.key
+            ui.card(row, if (active) Theme.CARD_HOVER else Theme.CARD, 9f)
+            ui.drawCover(LayoutBounds(row.x + 7f, row.y + 7f, rowH - 14f, rowH - 14f), CoverCache.track(t), 6f)
+            val tx = row.x + rowH + 4f
+            val tw = row.right - tx - 8f
+            ui.text(ui.trim(t.name, tw, 12f, Theme.FONT_SEMIBOLD), tx, row.y + 8f, 12f,
+                if (active) Theme.TEXT_PRIMARY else Theme.TEXT_SECONDARY, Theme.FONT_SEMIBOLD)
+            ui.text(ui.trim(t.artists.firstOrNull().orEmpty(), tw, 10f), tx, row.y + 25f, 10f, Theme.TEXT_TERTIARY)
+            ui.hits += row.intersect(list) to { MusicPlayer.playIndex(i) }
+        }
+        ui.endClip()
+        if (q.isEmpty()) ui.text(I18n.text("Nothing in the queue yet"), list.x + 4f, list.y + 6f, 12f, Theme.TEXT_TERTIARY)
+        drawControls(LayoutBounds(area.x, area.bottom - controlsH, area.width, controlsH))
+    }
+
+    /** Lima tombol bulat: repeat, prev, play/pause (besar), next, shuffle */
+    private fun drawControls(area: LayoutBounds) {
+        val d = 44f
+        val cy = area.y + area.height / 2f
+        val step = area.width / 5f
+        fun cx(i: Int) = area.x + step * (i + 0.5f)
+        val module = DangoMusic.instance.moduleManager.get(NeteaseMusicModule::class.java)
+        circle(cx(0), cy, d, MusicPlayer.repeatOne, "↻") { module.toggleRepeatOne() }
+        circle(cx(1), cy, d, false, "◀") { MusicPlayer.prev() }
+        playPause(cx(2), cy, 56f)
+        circle(cx(3), cy, d, false, "▶") { MusicPlayer.next() }
+        circle(cx(4), cy, d, MusicPlayer.shuffle, "⇄") { module.toggleShuffle() }
+    }
+
+    private fun circle(cx: Float, cy: Float, d: Float, on: Boolean, glyph: String, action: () -> Unit) {
+        val b = LayoutBounds(cx - d / 2f, cy - d / 2f, d, d)
+        ui.card(b, if (on) RED else Theme.CARD, d / 2f)
+        ui.icon(glyph, cx, cy, 14f, if (on) Theme.TEXT_PRIMARY else Theme.TEXT_SECONDARY)
+        ui.hits += b to action
+    }
+
+    private fun playPause(cx: Float, cy: Float, d: Float) {
+        val b = LayoutBounds(cx - d / 2f, cy - d / 2f, d, d)
+        ui.card(b, RED, d / 2f)
+        if (MusicPlayer.state == MusicPlayer.State.PLAYING) {
+            ui.card(LayoutBounds(cx - 8f, cy - 9f, 5f, 18f), Theme.TEXT_PRIMARY, 2f)
+            ui.card(LayoutBounds(cx + 3f, cy - 9f, 5f, 18f), Theme.TEXT_PRIMARY, 2f)
+        } else {
+            ui.icon("▶", cx + 2f, cy, 18f, Theme.TEXT_PRIMARY)
+        }
+        ui.hits += b to { MusicPlayer.togglePause() }
+    }
+
+    /** Kanan: cover di tengah, kotak judul, lalu panel lirik yang mengikuti posisi lagu */
+    private fun drawPanel(area: LayoutBounds) {
+        val cur = MusicPlayer.current
+        val side = minOf(area.width, area.height * 0.5f)
+        val cover = LayoutBounds(area.x + (area.width - side) / 2f, area.y, side, side)
+        ui.drawCover(cover, cur?.let { CoverCache.track(it) }, 14f)
+
+        val titleBox = LayoutBounds(area.x, cover.bottom + 12f, area.width, 56f)
+        ui.card(titleBox, Theme.CARD, 14f)
+        val cx = area.x + area.width / 2f
+        if (cur != null) {
+            centered(ui.trim(cur.name, titleBox.width - 24f, 15f, Theme.FONT_SEMIBOLD), cx, titleBox.y + 10f, 15f, Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
+            centered(ui.trim(cur.artists.joinToString(" / "), titleBox.width - 24f, 11f), cx, titleBox.y + 32f, 11f, Theme.TEXT_SECONDARY)
+        }
+
+        val lyricBox = LayoutBounds(area.x, titleBox.bottom + 12f, area.width, area.bottom - titleBox.bottom - 12f)
+        ui.card(lyricBox, Theme.CARD, 14f)
+        if (cur == null) {
+            centered(I18n.text("Nothing playing"), cx, lyricBox.y + lyricBox.height / 2f - 7f, 12f, Theme.TEXT_TERTIARY)
+            return
+        }
+        val lyrics = Library.lyricsFor(cur)
+        val lines = lyrics?.lines.orEmpty()
+        if (lines.isEmpty()) {
+            val msg = if (lyrics == null && !Library.lyricsReady(cur)) "Loading lyrics..." else "No lyrics"
+            centered(I18n.text(msg), cx, lyricBox.y + lyricBox.height / 2f - 7f, 12f, Theme.TEXT_TERTIARY)
+            return
+        }
+        val idx = max(0, lyrics!!.indexAt(MusicPlayer.positionMs))
+        val mid = lyricBox.y + lyricBox.height / 2f
+        ui.beginClip(lyricBox)
+        for (k in -3..3) {
+            val j = idx + k
+            if (j < 0 || j >= lines.size) continue
+            val active = k == 0
+            val size = if (active) 16f else 12f
+            val color = if (active) Theme.TEXT_PRIMARY else Theme.TEXT_TERTIARY
+            centered(ui.trim(lines[j].text, lyricBox.width - 24f, size, if (active) Theme.FONT_SEMIBOLD else Theme.FONT_REGULAR),
+                cx, mid + k * 32f - (if (active) 8f else 6f), size, color, if (active) Theme.FONT_SEMIBOLD else Theme.FONT_REGULAR)
+        }
+        ui.endClip()
+    }
+
+    private fun centered(s: String, cx: Float, y: Float, size: Float, color: me.sorihiko.dango.utils.Color, font: String = Theme.FONT_REGULAR) {
+        ui.text(s, cx - ui.width(s, size, font) / 2f, y, size, color, font)
+    }
+}

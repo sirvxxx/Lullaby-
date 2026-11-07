@@ -18,7 +18,7 @@ import me.sorihiko.dango.music.SourceArtist
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 
-internal enum class Page { HOME, CHARTS, PLAYLIST, SEARCH, QUEUE, PARTY, SETTINGS, ARTIST }
+internal enum class Page { HOME, CHARTS, PLAYLIST, PLAYLISTS, SEARCH, QUEUE, PARTY, SETTINGS, ARTIST }
 
 /** 点进歌手页、从歌手页点进专辑之前的界面，返回时一层层退回去 */
 internal class PageSnapshot(
@@ -66,6 +66,16 @@ internal object Library {
         }
         private set(value) { statusState = Status(value) }
     @Volatile var recommend: List<NeteasePlaylist>? = null
+
+    /** Home: lagu trending (acak). Charts: lagu chart (urut). */
+    @Volatile var trending: List<NeteaseTrack>? = null
+    @Volatile var trendingLoading = false
+    @Volatile var chartTracks: List<NeteaseTrack>? = null
+    @Volatile var chartTracksLoading = false
+
+    @Volatile private var lyricsKey = ""
+    @Volatile private var lyricsValue: me.sorihiko.dango.lyrics.Lyrics? = null
+    @Volatile private var lyricsAsked = ""
         private set
     @Volatile var recommendLoading = false
         private set
@@ -150,6 +160,46 @@ internal object Library {
             publish(request) { recommend = if (error.isEmpty()) result else null; recommendLoading = false; if (error.isNotEmpty()) status = error }
         }
     }
+    /** Home: dibuka = acak ulang (list sudah ada), kalau belum ada ambil dari YouTube */
+    @Synchronized fun loadTrending() {
+        val cur = trending
+        if (!cur.isNullOrEmpty()) { trending = cur.shuffled(); return }
+        if (trendingLoading) return
+        trendingLoading = true
+        worker.execute {
+            val r = try { me.sorihiko.dango.music.YoutubeMusicSource.trendingTracks() } catch (e: Exception) { emptyList() }
+            trending = if (r.isEmpty()) null else r.shuffled()
+            trendingLoading = false
+        }
+    }
+
+    @Synchronized fun loadChartTracks() {
+        if (!chartTracks.isNullOrEmpty() || chartTracksLoading) return
+        chartTracksLoading = true
+        worker.execute {
+            val r = try { me.sorihiko.dango.music.YoutubeMusicSource.chartTracksNow() } catch (e: Exception) { emptyList() }
+            chartTracks = if (r.isEmpty()) null else r
+            chartTracksLoading = false
+        }
+    }
+
+    /** Lirik lagu yang sedang diputar. null = belum ada (sedang diambil, atau tidak ada). */
+    fun lyricsFor(t: NeteaseTrack): me.sorihiko.dango.lyrics.Lyrics? {
+        if (lyricsKey == t.key) return lyricsValue
+        if (lyricsAsked != t.key) {
+            lyricsAsked = t.key
+            worker.execute {
+                val l = try { MusicSources.api(t.source).lyrics(t) } catch (e: Exception) { null }
+                lyricsValue = l
+                lyricsKey = t.key
+            }
+        }
+        return null
+    }
+
+    /** Sudah selesai mencoba mengambil lirik lagu ini (berhasil atau tidak) */
+    fun lyricsReady(t: NeteaseTrack): Boolean = lyricsKey == t.key
+
     @Synchronized fun loadCharts() {
         if (charts != null || chartsLoading) return
         val request = request()

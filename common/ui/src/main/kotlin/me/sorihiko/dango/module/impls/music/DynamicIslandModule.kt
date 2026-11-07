@@ -71,7 +71,9 @@ class DynamicIslandModule : Module() {
     private fun vertical() = position.value >= 2
 
     /** Ukuran yang dipakai: di sisi layar lebarnya dan tingginya ditukar (pil berdiri tegak) */
-    private fun dims(kind: Kind): Pair<Float, Float> = sizeOf(kind).let { (w0, h0) -> if (vertical()) h0 to w0 else w0 to h0 }
+    private fun dims(kind: Kind): Pair<Float, Float> =
+        if (vertical() && kind == Kind.SONG) 84f to 150f          // pil sisi: lebar dan tinggi tetap, isinya rata tengah
+        else sizeOf(kind).let { (w0, h0) -> if (vertical()) h0 to w0 else w0 to h0 }
 
     private fun pillPosition(lw: Float, lh: Float, edge: Float, margin: Float): LayoutBounds {
         val x: Float
@@ -366,24 +368,38 @@ class DynamicIslandModule : Module() {
         }
     }
 
-    /** Mode vertikal (sisi layar): cover di atas, judul dan artis di bawahnya, progres di bawah */
+    /** Mode vertikal (sisi layar): semua isi rata tengah. Cover, judul, artis, audio visualizer, progres. */
     private fun drawSongVertical(ctx: GuiCanvas, b: LayoutBounds) {
         val t = MusicPlayer.current ?: return
-        val size = minOf(b.width - 14f, 52f)
-        val cover = LayoutBounds(b.x + (b.width - size) / 2f, b.y + 10f, size, size)
+        val cx = b.x + b.width / 2f
+        val inner = b.width - 14f
+
+        val size = 48f
+        val cover = LayoutBounds(cx - size / 2f, b.y + 14f, size, size)
         drawCover(ctx, cover, CoverCache.trackRounded(t) ?: CoverCache.track(t))
-        val tx = b.x + 6f
-        val tw = b.width - 12f
-        val ty = cover.bottom + 8f
-        text(ctx, trim(t.name, tw, 10f, Theme.FONT_SEMIBOLD), tx, ty, 10f, Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
-        text(ctx, trim(t.artists.firstOrNull().orEmpty(), tw, 9f), tx, ty + 14f, 9f, Theme.TEXT_SECONDARY)
-        val bar = LayoutBounds(tx, b.bottom - 12f, tw, 3f)
-        ctx.drawShape(bar, ShapeStyle(Theme.TRACK, 1.5f))
+
+        val title = trim(t.name, inner, 10f, Theme.FONT_SEMIBOLD)
+        centered(ctx, title, cx, cover.bottom + 9f, 10f, Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
+        val artist = trim(t.artists.firstOrNull().orEmpty(), inner, 9f)
+        centered(ctx, artist, cx, cover.bottom + 23f, 9f, Theme.TEXT_SECONDARY)
+
+        // audio visualizer: 4 batang, lebar 13px, rata tengah di bawah teks
+        val playing = MusicPlayer.state == MusicPlayer.State.PLAYING
+        bars(ctx, cx - 13f / 2f, b.y + 118f, playing, 14f)
+
+        // progres tipis di bawah
+        val bar = LayoutBounds(b.x + 12f, b.bottom - 12f, b.width - 24f, 2.5f)
+        ctx.drawShape(bar, ShapeStyle(Theme.TRACK, 1.25f))
         val dur = MusicPlayer.durationMs
         if (dur > 0) {
             val f = (MusicPlayer.positionMs.toDouble() / dur).coerceIn(0.0, 1.0).toFloat()
-            ctx.drawShape(LayoutBounds(bar.x, bar.y, max(3f, bar.width * f), bar.height), ShapeStyle(Theme.TEXT_PRIMARY, 1.5f))
+            ctx.drawShape(LayoutBounds(bar.x, bar.y, max(2.5f, bar.width * f), bar.height), ShapeStyle(Theme.TEXT_PRIMARY, 1.25f))
         }
+    }
+
+    /** Teks rata tengah di sumbu [cx] */
+    private fun centered(ctx: GuiCanvas, s: String, cx: Float, y: Float, size: Float, color: Color, font: String = Theme.FONT_REGULAR) {
+        text(ctx, s, cx - width(s, size, font) / 2f, y, size, color, font)
     }
 
     private fun drawCover(ctx: GuiCanvas, b: LayoutBounds, tex: Texture?) {

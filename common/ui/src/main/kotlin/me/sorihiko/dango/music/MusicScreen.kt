@@ -8,6 +8,7 @@ import me.sorihiko.dango.musicui.ArtistPage
 import me.sorihiko.dango.musicui.ArtistRef
 import me.sorihiko.dango.musicui.GridPage
 import me.sorihiko.dango.musicui.Library
+import me.sorihiko.dango.music.CloudDrives
 import me.sorihiko.dango.musicui.LoginDialog
 import me.sorihiko.dango.musicui.Page
 import me.sorihiko.dango.musicui.PageSnapshot
@@ -54,6 +55,8 @@ class MusicScreen(
     private val artistPage = ArtistPage(this)
     private val party = PartyPage(this)
     private val settings = SettingsPage(this, module)
+    internal val trackGrid = TrackCardGrid(this)
+    internal val nowPlaying = NowPlayingPage(this)
 
     /** 有输入框在打字（搜索、筛选、房间码、代理、设置里改数值 / 颜色）：平台层据此让系统输入法可用 */
     val textInputActive: Boolean
@@ -121,9 +124,10 @@ class MusicScreen(
         ScreenState.artist = null
         tracks.resetScroll()
         grid.resetScroll()
+        trackGrid.resetScroll()
         when (p) {
-            Page.HOME -> Library.loadRecommend()
-            Page.CHARTS -> Library.loadCharts()
+            Page.HOME -> Library.loadTrending()
+            Page.CHARTS -> Library.loadChartTracks()
             Page.QUEUE -> if (ScreenState.coverView) tracks.focusCurrentInCoverflow()
             else -> {}
         }
@@ -154,6 +158,7 @@ class MusicScreen(
         ScreenState.lastQuery = snap.lastQuery
         tracks.resetScroll()
         grid.resetScroll()
+        trackGrid.resetScroll()
     }
 
     /** 记下现在的界面，之后"返回"能回到这里 */
@@ -177,6 +182,7 @@ class MusicScreen(
         ScreenState.backPage = null
         tracks.resetScroll()
         grid.resetScroll()
+        trackGrid.resetScroll()
     }
 
     internal fun goBackOrHome() {
@@ -276,6 +282,7 @@ class MusicScreen(
             ui.frameDt = if (lastNanos == 0L) 16f else ((now - lastNanos) / 1e6f).coerceAtMost(50f)
             lastNanos = now
             grid.tick()
+            trackGrid.tick()
             tracks.tick()
             artistPage.tick()
             settings.tick()
@@ -487,6 +494,7 @@ class MusicScreen(
         val body = LayoutBounds(area.x, area.y, area.width, area.height - (if (foot.isNotEmpty()) 18f else 4f))
         // 滚轮区域：哪一页画了，哪一页才有
         grid.area = LayoutBounds()
+        trackGrid.area = LayoutBounds()
         tracks.area = LayoutBounds()
         settings.area = LayoutBounds()
         artistPage.area = LayoutBounds()
@@ -503,14 +511,18 @@ class MusicScreen(
 
         when (s.page) {
             Page.HOME -> {
-                val rec = Library.recommend
-                val items = if (rec.isNullOrEmpty()) Library.playlists else rec
-                val label = if (rec.isNullOrEmpty()) I18n.text("Your playlists") else I18n.text("Recommended playlists")
-                grid.draw(body, I18n.text("Welcome to LULLABY+!"), "$label · ${items.size}", items, Library.recommendLoading && items.isEmpty())
+                val t = Library.trending ?: emptyList()
+                trackGrid.draw(body, I18n.text("Welcome to LULLABY+!"), I18n.format("Trending now · %d songs", t.size), t, Library.trendingLoading, false)
             }
             Page.CHARTS -> {
-                val c = Library.charts ?: emptyList()
-                grid.draw(body, I18n.text("Charts"), I18n.format("%d charts", c.size), c, Library.chartsLoading)
+                val t = Library.chartTracks ?: emptyList()
+                trackGrid.draw(body, I18n.text("Trending Music"), I18n.format("%d songs", t.size), t, Library.chartTracksLoading, true)
+            }
+            Page.QUEUE -> nowPlaying.draw(body)
+            Page.PLAYLISTS -> {
+                val cloud = CloudDrives.entry(MusicSources.selected)
+                val items = listOfNotNull(cloud) + Library.playlists.filterNot { it.id == CloudDrives.id(MusicSources.selected) }
+                grid.draw(body, I18n.text("Playlist"), I18n.format("%d playlists", items.size), items, Library.playlistsLoading)
             }
             Page.PARTY -> ui.itemAnim(0) { party.draw(LayoutBounds(body.x, body.y, body.width, body.height - ui.bottomInset)) }
             Page.SETTINGS -> settings.draw(body)
@@ -593,6 +605,7 @@ class MusicScreen(
         when {
             settings.area.contains(lx, ly) -> settings.scroll(wheel)
             sidebar.listArea.contains(lx, ly) -> sidebar.scrollBy(step)
+            trackGrid.area.contains(lx, ly) -> trackGrid.scroll(wheel)
             grid.area.contains(lx, ly) -> grid.scroll(wheel)
             artistPage.area.contains(lx, ly) -> artistPage.scroll(wheel)
             tracks.area.contains(lx, ly) -> tracks.scroll(wheel, step)

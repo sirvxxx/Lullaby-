@@ -175,67 +175,22 @@ internal class Sidebar(private val screen: MusicScreen) {
             y += 32f
         }
 
-        section("LULLABY+")
+        // 顶部：LULLABY+ 标志（mockup）
+        val logo = LayoutBounds(side.x + 6f, y, side.width - 12f, 30f)
+        ui.card(logo, Theme.CARD, 9f)
+        ui.text("LULLABY+", logo.x + 12f, logo.y + 8f, 13f, Theme.TEXT_PRIMARY, Theme.FONT_DISPLAY)
+        y += 42f
+
         nav("⌂", I18n.text("Home"), page == Page.HOME, true) { screen.go(Page.HOME) }
-        section(I18n.text("DISCOVER"))
         nav("▤", I18n.text("Charts"), page == Page.CHARTS, false) { screen.go(Page.CHARTS) }
         nav("♫", I18n.text("Now Playing"), page == Page.QUEUE, false) { screen.go(Page.QUEUE) }
-        val netease = MusicSources.selected == MusicSource.NETEASE
-        val playlists = Library.playlists
-        // 云盘是固定入口，不跟着歌单滚动；列表未加载完时也允许直接打开。
-        CloudDrives.entry(MusicSources.selected)?.let { cloud ->
-            nav("☁", I18n.text("Cloud drive"), page == Page.PLAYLIST && ScreenState.opened?.id == cloud.id, false) {
-                screen.openPlaylist(cloud, null)
-            }
-        }
-        y += 4f
-        section(I18n.text("MY PLAYLISTS"))
+        nav("≡", I18n.text("Playlist"), page == Page.PLAYLISTS || page == Page.PLAYLIST, false) { screen.go(Page.PLAYLISTS) }
 
-        // 歌单列表（底部留出按钮和账号的位置）
-        val rowH = 30f
+        // 歌单列表和云盘现在在 Playlist 页（grid），侧栏不再画列表
         val footerH = 92f
-        listArea = LayoutBounds(side.x + 6f, y, side.width - 12f, side.bottom - footerH - y)
-        val rows = max(1, (listArea.height / rowH).toInt())
-        val list = playlists.filterNot { it.id == CloudDrives.id(MusicSources.selected) }
-        scroll = scroll.coerceIn(0, max(0, list.size - rows))
-        scrollPos = ui.easeScroll(scrollPos, scroll, rows * 3)
-        val firstOwned = list.indexOfFirst { it.owned }
-        val first = kotlin.math.floor(scrollPos).toInt()
-        val frac = scrollPos - first
-        // 音源菜单打开时，歌单只画到菜单上沿：文字是最后统一画的，不让出来会透过菜单显示
-        val listShown = if (menuNow != null) LayoutBounds(listArea.x, listArea.y, listArea.width,
-            max(0f, kotlin.math.min(listArea.bottom, menuNow.y - 4f) - listArea.y)) else listArea
-        ui.beginClip(listShown)
-        for (r in 0..rows) {
-            val i = first + r
-            if (i < 0) continue
-            if (i >= list.size) break
-            val p = list[i]
-            val row = LayoutBounds(listArea.x, listArea.y + (r - frac) * rowH, listArea.width, rowH - 2f)
-            val active = page == Page.PLAYLIST && ScreenState.opened?.id == p.id
-            if (active) {
-                newKey = "pl:${p.id}"
-                newTarget = row
-            } else if (ui.hover(row)) {
-                ui.card(row, Theme.CARD_HOVER, 9f)
-            }
-            val liked = i == firstOwned   // 第一个自己的歌单就是"我喜欢的音乐"
-            // 歌单封面的小缩略图；"我喜欢的音乐"和还没加载出封面的照旧画图标
-            val thumb = if (liked || p.coverUrl.isEmpty()) null else CoverCache.playlistRounded(p, 0.25f)
-            if (thumb != null) ui.drawCover(LayoutBounds(row.x + 9f, row.y + 5f, 18f, 18f), thumb)
-            else ui.icon(if (liked) "♥" else "≡", row.x + 18f, row.y + 14f, 12f, if (liked) LOVE else if (active) RED else Theme.TEXT_SECONDARY)
-            val c = if (active) Theme.TEXT_PRIMARY else if (p.owned) Theme.TEXT_PRIMARY else Theme.TEXT_SECONDARY
-            ui.text(ui.trim(p.name, row.right - 8f - (row.x + 34f), 12f), row.x + 34f, row.y + 9f, 12f, c)
-            ui.hits += row.intersect(listShown) to { screen.openPlaylist(p, null) }
-        }
-        ui.endClip()
-        if (list.isEmpty() && (menuNow == null || listArea.y + 18f < menuNow.y)) {
-            val loggedIn = if (MusicSources.selected == MusicSource.NETEASE) NeteaseApi.loggedIn else NativeAccounts.get(MusicSources.selected) != null
-            val msg = if (Library.playlistsLoading) I18n.text("Loading...") else if (loggedIn) I18n.text("No playlists") else I18n.text("Log in to see your playlists")
-            ui.text(msg, x + 2f, listArea.y + 6f, 11f, Theme.TEXT_TERTIARY)
-            if (Library.playlistsLoading) ui.progressBar(LayoutBounds(x + 2f, listArea.y + 24f, iw - 4f, 3f), null)
-        }
-
+        listArea = LayoutBounds()
+        scroll = 0
+        scrollPos = 0f
         // 设置按钮（歌单会在打开播放器时自动刷新，不需要刷新按钮）；被音源菜单盖住时不画
         val settingsY = side.bottom - footerH + 8f
         if (menuNow == null || menuNow.y > settingsY + 32f) drawSettingsButton(x, iw, settingsY, page)
