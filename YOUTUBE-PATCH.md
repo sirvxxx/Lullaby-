@@ -54,3 +54,4 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Dynamic Island mode samping: pil tetap 84x150, cover 48px rata tengah, judul dan artis rata tengah, audio visualizer rata tengah di bawah teks, progres tipis di bawah.
 - GUI tahap 1 (sesuai mockup): sidebar berisi logo LULLABY+, Home, Charts, Now Playing, Playlist. Daftar playlist dan cloud drive pindah ke halaman Playlist (grid). Page baru: PLAYLISTS.
 - GUI tahap 2-4: Now Playing (antrean kiri, lima tombol bulat di bawah, cover + kotak judul + panel lirik kanan). Home: lagu trending YouTube diacak tiap dibuka, grid 5 kolom. Charts: "Trending Music" dengan garis aksen, grid lagu chart urut. Lirik diambil lewat sumber lagu (LRCLIB/NetEase). File baru: musicui/TrackPages.kt.
+- Perbaikan build: MusicScreen meng-import TrackCardGrid dan NowPlayingPage dari paket musicui.

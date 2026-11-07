@@ -8,6 +8,8 @@ import me.sorihiko.dango.musicui.ArtistPage
 import me.sorihiko.dango.musicui.ArtistRef
 import me.sorihiko.dango.musicui.GridPage
 import me.sorihiko.dango.musicui.Library
+import me.sorihiko.dango.musicui.TrackCardGrid
+import me.sorihiko.dango.musicui.NowPlayingPage
 import me.sorihiko.dango.music.CloudDrives
 import me.sorihiko.dango.musicui.LoginDialog
 import me.sorihiko.dango.musicui.Page
