@@ -1,0 +1,44 @@
+.gradle/
+.kotlin/
+build/
+dist/
+build.log
+logs/
+run/
+out/
+*.iml
+.idea/
+
+# Local music sessions, including copies created while testing login.
+*_session.json
+*_session.json.tmp
+
+# Firebase 配置（含 API Key），不上传；模板见 firebase.properties.example
+common/core/src/main/resources/firebase.properties
+
+# JVM crash dumps (e.g. the Java 25 C2 crash) and any other logs
+hs_err_pid*.log
+replay_pid*.log
+*.log
+
+# Runtime data if a client is run from inside the repo: logins, cookies, local settings
+config/lullaby/
+firebase_auth.json
+netease_cookie.txt
+
+# Editor / OS / tool leftovers
+.vscode/
+.claude/
+node_modules/
+.DS_Store
+Thumbs.db
+
+# Notes for the AI assistant (instructions, hand-off and work plans): local only
+docs/LISTEN-TOGETHER-PLAN.md
+docs/CHANGELOG-1.6.0-beta.md
+tests/
+relay/
+docs/ISSUE-36-PLAYBACK.md
+docs/ISSUE-KUGOU-PLAYBACK.md
+docs/NETEASE-CLOUD-BETA.md
+docs/OGG-AUDIO.md
