@@ -167,7 +167,8 @@ internal object Library {
         if (trendingLoading) return
         trendingLoading = true
         worker.execute {
-            val r = try { me.sorihiko.dango.music.YoutubeMusicSource.trendingTracks() } catch (e: Exception) { emptyList() }
+            val r0 = try { me.sorihiko.dango.music.YoutubeMusicSource.trendingTracks() } catch (e: Exception) { emptyList() }
+            val r = r0.ifEmpty { try { me.sorihiko.dango.music.YoutubeMusicSource.fallbackSongs() } catch (e: Exception) { emptyList() } }
             trending = if (r.isEmpty()) null else r.shuffled()
             trendingLoading = false
         }
@@ -177,7 +178,8 @@ internal object Library {
         if (!chartTracks.isNullOrEmpty() || chartTracksLoading) return
         chartTracksLoading = true
         worker.execute {
-            val r = try { me.sorihiko.dango.music.YoutubeMusicSource.chartTracksNow() } catch (e: Exception) { emptyList() }
+            val r0 = try { me.sorihiko.dango.music.YoutubeMusicSource.chartTracksNow() } catch (e: Exception) { emptyList() }
+            val r = r0.ifEmpty { try { me.sorihiko.dango.music.YoutubeMusicSource.fallbackSongs() } catch (e: Exception) { emptyList() } }
             chartTracks = if (r.isEmpty()) null else r
             chartTracksLoading = false
         }

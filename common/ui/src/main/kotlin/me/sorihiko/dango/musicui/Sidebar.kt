@@ -100,27 +100,9 @@ internal class Sidebar(private val screen: MusicScreen) {
         scroll += rows
     }
 
-    fun draw(side: LayoutBounds) {
+    /** Kotak search: sekarang digambar di header konten (mockup), bukan di sidebar */
+    fun drawSearch(x: Float, y: Float, iw: Float) {
         val ctx = ui.ctx
-        val page = ScreenState.page
-        ctx.drawGlass(side, Theme.GLASS_SIDEBAR)
-        drawSelectionPill(side)
-        var newKey = ""
-        var newTarget: LayoutBounds? = null
-        val x = side.x + 12f
-        val iw = side.width - 24f
-        var y = side.y + 12f
-
-        menuRects.clear()
-        val now = System.nanoTime()
-        val dt = if (frameNanos == 0L) 0.016f else ((now - frameNanos) / 1e9f).coerceIn(0f, 0.05f)
-        frameNanos = now
-        stepMenu(dt)
-        searchFocus.step(if (searchFocused) 1f else 0f, dt)
-        searchPress.step(0f, dt)
-        settingsOn.step(if (page == Page.SETTINGS) 1f else 0f, dt)
-        settingsPress.step(0f, dt)
-        val menuNow = if (menuVisible) menuRect(side) else null
         // 搜索框：放大镜 + 输入。点击区域固定，动画只改画出来的样子：
         // 聚焦时框微微鼓起、外面一圈淡红光晕、描边和放大镜渐变成红色，提示文字往右滑走淡出
         searchRect = LayoutBounds(x, y, iw, 32f)
@@ -154,7 +136,29 @@ internal class Sidebar(private val screen: MusicScreen) {
             if (!searchFocused) searchPress.v -= 6f
             searchFocused = true
         }
-        y += 42f
+    }
+
+    fun draw(side: LayoutBounds) {
+        val ctx = ui.ctx
+        val page = ScreenState.page
+        ctx.drawGlass(side, Theme.GLASS_SIDEBAR)
+        drawSelectionPill(side)
+        var newKey = ""
+        var newTarget: LayoutBounds? = null
+        val x = side.x + 12f
+        val iw = side.width - 24f
+        var y = side.y + 12f
+
+        menuRects.clear()
+        val now = System.nanoTime()
+        val dt = if (frameNanos == 0L) 0.016f else ((now - frameNanos) / 1e9f).coerceIn(0f, 0.05f)
+        frameNanos = now
+        stepMenu(dt)
+        searchFocus.step(if (searchFocused) 1f else 0f, dt)
+        searchPress.step(0f, dt)
+        settingsOn.step(if (page == Page.SETTINGS) 1f else 0f, dt)
+        settingsPress.step(0f, dt)
+        val menuNow = if (menuVisible) menuRect(side) else null
 
         fun section(label: String) {
             ui.text(label, x + 2f, y, 10f, Theme.TEXT_TERTIARY, Theme.FONT_SEMIBOLD)

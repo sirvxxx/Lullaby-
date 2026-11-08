@@ -493,10 +493,14 @@ class MusicScreen(
         val foot = I18n.message(Library.status)
         // 提示文字放在播放栏上面，不被它挡住
         if (foot.isNotEmpty()) ui.text(ui.trim(foot, area.width, 10f, Theme.FONT_SEMIBOLD), area.x, area.bottom - ui.bottomInset - 13f, 10f, RED, Theme.FONT_SEMIBOLD)
-        val body = LayoutBounds(area.x, area.y, area.width, area.height - (if (foot.isNotEmpty()) 18f else 4f))
+        // kotak search di atas konten (mockup); konten mulai di bawahnya
+        sidebar.drawSearch(area.x, area.y, area.width)
+        val body = LayoutBounds(area.x, area.y + 44f, area.width, area.height - 44f - (if (foot.isNotEmpty()) 18f else 4f))
         // 滚轮区域：哪一页画了，哪一页才有
         grid.area = LayoutBounds()
         trackGrid.area = LayoutBounds()
+        nowPlaying.queueArea = LayoutBounds()
+        nowPlaying.lyricArea = LayoutBounds()
         tracks.area = LayoutBounds()
         settings.area = LayoutBounds()
         artistPage.area = LayoutBounds()
@@ -607,6 +611,8 @@ class MusicScreen(
         when {
             settings.area.contains(lx, ly) -> settings.scroll(wheel)
             sidebar.listArea.contains(lx, ly) -> sidebar.scrollBy(step)
+            nowPlaying.queueArea.contains(lx, ly) -> nowPlaying.scrollQueue(wheel)
+            nowPlaying.lyricArea.contains(lx, ly) -> nowPlaying.scrollLyric(wheel)
             trackGrid.area.contains(lx, ly) -> trackGrid.scroll(wheel)
             grid.area.contains(lx, ly) -> grid.scroll(wheel)
             artistPage.area.contains(lx, ly) -> artistPage.scroll(wheel)

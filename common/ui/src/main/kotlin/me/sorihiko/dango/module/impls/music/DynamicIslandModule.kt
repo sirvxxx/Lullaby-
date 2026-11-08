@@ -72,7 +72,7 @@ class DynamicIslandModule : Module() {
 
     /** Ukuran yang dipakai: di sisi layar lebarnya dan tingginya ditukar (pil berdiri tegak) */
     private fun dims(kind: Kind): Pair<Float, Float> =
-        if (vertical() && kind == Kind.SONG) 84f to 150f          // pil sisi: lebar dan tinggi tetap, isinya rata tengah
+        if (vertical() && kind == Kind.SONG) 72f to 136f          // pil sisi: cover bulat + batang visualizer
         else sizeOf(kind).let { (w0, h0) -> if (vertical()) h0 to w0 else w0 to h0 }
 
     private fun pillPosition(lw: Float, lh: Float, edge: Float, margin: Float): LayoutBounds {
@@ -368,32 +368,31 @@ class DynamicIslandModule : Module() {
         }
     }
 
-    /** Mode vertikal (sisi layar): semua isi rata tengah. Cover, judul, artis, audio visualizer, progres. */
+    /** Mode samping (mockup): cover bulat di atas, lalu batang visualizer vertikal di bawahnya */
     private fun drawSongVertical(ctx: GuiCanvas, b: LayoutBounds) {
         val t = MusicPlayer.current ?: return
         val cx = b.x + b.width / 2f
-        val inner = b.width - 14f
+        val d = 44f
+        val cover = LayoutBounds(cx - d / 2f, b.y + 14f, d, d)
+        CoverCache.upload()
+        val tex = CoverCache.trackRounded(t, 0.5f)
+        if (tex != null) ctx.drawImage(cover, tex)
+        else ctx.drawShape(cover, ShapeStyle(Theme.TRACK, d / 2f))
 
-        val size = 48f
-        val cover = LayoutBounds(cx - size / 2f, b.y + 14f, size, size)
-        drawCover(ctx, cover, CoverCache.trackRounded(t) ?: CoverCache.track(t))
-
-        val title = trim(t.name, inner, 10f, Theme.FONT_SEMIBOLD)
-        centered(ctx, title, cx, cover.bottom + 9f, 10f, Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
-        val artist = trim(t.artists.firstOrNull().orEmpty(), inner, 9f)
-        centered(ctx, artist, cx, cover.bottom + 23f, 9f, Theme.TEXT_SECONDARY)
-
-        // audio visualizer: 4 batang, lebar 13px, rata tengah di bawah teks
         val playing = MusicPlayer.state == MusicPlayer.State.PLAYING
-        bars(ctx, cx - 13f / 2f, b.y + 118f, playing, 14f)
-
-        // progres tipis di bawah
-        val bar = LayoutBounds(b.x + 12f, b.bottom - 12f, b.width - 24f, 2.5f)
-        ctx.drawShape(bar, ShapeStyle(Theme.TRACK, 1.25f))
-        val dur = MusicPlayer.durationMs
-        if (dur > 0) {
-            val f = (MusicPlayer.positionMs.toDouble() / dur).coerceIn(0.0, 1.0).toFloat()
-            ctx.drawShape(LayoutBounds(bar.x, bar.y, max(2.5f, bar.width * f), bar.height), ShapeStyle(Theme.TEXT_PRIMARY, 1.25f))
+        val time = System.nanoTime() / 1e9
+        val n = 9
+        val step = 5.6f
+        val top = cover.bottom + 14f
+        for (i in 0 until n) {
+            val amp = if (playing)
+                0.3f + 0.7f * kotlin.math.abs(sin(time * (4.2 + i * 0.73) + i * 1.1)).toFloat()
+            else 0.3f
+            val w = 8f + 30f * amp
+            ctx.drawShape(
+                LayoutBounds(cx - w / 2f, top + i * step, w, 2.6f),
+                ShapeStyle(if (playing) Theme.TEXT_PRIMARY else Theme.TEXT_TERTIARY, 1.3f),
+            )
         }
     }
 

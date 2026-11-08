@@ -583,11 +583,21 @@ object MusicPlayer {
     /** 这首歌要乘的倍数（1 = 原样） */
     @Volatile private var trackGain = 1f
 
+    /** Soft limiter: di bawah 85% dibiarkan apa adanya, di atasnya dibulatkan pelan-pelan (tidak dipotong keras) */
+    private fun softClip(x: Float): Short {
+        val knee = 27853f                      // 0.85 * 32768
+        val a = kotlin.math.abs(x)
+        if (a <= knee) return x.toInt().toShort()
+        val room = 32767f - knee
+        val y = knee + room * kotlin.math.tanh((a - knee) / room)
+        return (if (x < 0f) -y else y).toInt().coerceIn(-32768, 32767).toShort()
+    }
+
     private fun loudnessGain(url: NeteaseApi.SongUrl): Float {
         if (!normalize || url.gainDb == 0f) return 1f
         var gain = Math.pow(10.0, url.gainDb / 20.0).toFloat()
         // 有峰值就别把峰值推过 1（会破音）
-        if (url.peak > 0f) gain = minOf(gain, 0.98f / url.peak)
+        if (url.peak > 0f) gain = minOf(gain, 0.98f / url.peak) else gain = minOf(gain, 1f)
         return gain.coerceIn(0.25f, 2f)
     }
 
@@ -678,7 +688,7 @@ object MusicPlayer {
                 decodedMs += frameMs
                 // 音量均衡、环境音效（水下变闷、洞穴回声……）在鼓点检测之后加，不影响节奏判断
                 val gain = trackGain
-                if (gain != 1f) for (idx in 0 until len) pcm[idx] = (pcm[idx] * gain).toInt().coerceIn(-32768, 32767).toShort()
+                if (gain != 1f) for (idx in 0 until len) pcm[idx] = softClip(pcm[idx] * gain)
                 EnvironmentAudio.process(pcm, len, ch, frame.rate, frameMs)
                 val data = ByteArray(len * 2)
                 for (k in 0 until len) {

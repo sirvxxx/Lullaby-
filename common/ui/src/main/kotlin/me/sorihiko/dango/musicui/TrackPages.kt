@@ -10,6 +10,7 @@ import me.sorihiko.dango.music.NeteaseTrack
 import me.sorihiko.dango.ui.LayoutBounds
 import me.sorihiko.dango.ui.Theme
 import kotlin.math.max
+import kotlin.math.min
 
 /** Home & Charts: grid lagu 5 kolom. Kartu = cover persegi + nama + artis (sesuai mockup). */
 internal class TrackCardGrid(private val screen: MusicScreen) {
@@ -34,7 +35,9 @@ internal class TrackCardGrid(private val screen: MusicScreen) {
         target = (target + (if (wheel > 0) -120f else 120f)).coerceIn(0f, maxScroll)
     }
 
-    fun draw(body: LayoutBounds, title: String, sub: String, tracks: List<NeteaseTrack>, loading: Boolean, accent: Boolean) {
+    fun draw(area0: LayoutBounds, title: String, sub: String, tracks: List<NeteaseTrack>, loading: Boolean, accent: Boolean) {
+        // di atas dock pemutar
+        val body = LayoutBounds(area0.x, area0.y, area0.width, area0.height - ui.bottomInset)
         ui.headerAnim {
             ui.text(title, body.x, body.y, 22f, Theme.TEXT_PRIMARY, Theme.FONT_DISPLAY)
             ui.text(if (loading) I18n.text("Loading...") else sub, body.x, body.y + 30f, 11f, Theme.TEXT_SECONDARY, Theme.FONT_SEMIBOLD)
@@ -73,11 +76,32 @@ internal class TrackCardGrid(private val screen: MusicScreen) {
     }
 }
 
-/** Now Playing (mockup): antrean di kiri + tombol bulat di bawah; cover, judul, dan lirik di kanan. */
+/**
+ * Now Playing (mockup): antrean di kiri (bisa di-scroll) + lima tombol bulat dan volume di bawah;
+ * di kanan: cover, kotak judul, dan panel lirik (bisa di-scroll).
+ */
 internal class NowPlayingPage(private val screen: MusicScreen) {
     private val ui = screen.ui
 
-    fun draw(body: LayoutBounds) {
+    /** wilayah yang bisa di-scroll; diisi saat digambar, dipakai roda mouse di MusicScreen */
+    var queueArea = LayoutBounds()
+    var lyricArea = LayoutBounds()
+
+    private var queueTarget = 0f
+    private var queuePos = 0f
+    private var lyricScroll = 0f      // px; lirik aktif berpusat di sini kalau 0
+    private var lastIdx = -1
+
+    fun scrollQueue(wheel: Int) {
+        queueTarget += if (wheel > 0) -60f else 60f
+    }
+
+    fun scrollLyric(wheel: Int) {
+        lyricScroll += if (wheel > 0) -32f else 32f
+    }
+
+    fun draw(body0: LayoutBounds) {
+        val body = LayoutBounds(body0.x, body0.y, body0.width, body0.height - ui.bottomInset)
         val gap = 20f
         val leftW = body.width * 0.36f
         val left = LayoutBounds(body.x, body.y, leftW, body.height)
@@ -88,15 +112,21 @@ internal class NowPlayingPage(private val screen: MusicScreen) {
     }
 
     private fun drawQueue(area: LayoutBounds) {
-        val controlsH = 66f
-        val list = LayoutBounds(area.x, area.y, area.width, area.height - controlsH)
+        val controlsH = 104f
+        val list = LayoutBounds(area.x, area.y, area.width, area.height - controlsH - 8f)
+        queueArea = list
         val q = MusicPlayer.queue
         val cur = MusicPlayer.current
         val rowH = 46f
+        val step = rowH + 4f
+        val maxScroll = max(0f, q.size * step - list.height)
+        queueTarget = queueTarget.coerceIn(0f, maxScroll)
+        queuePos = ui.approach(queuePos, queueTarget, 60f)
+
         ui.beginClip(list)
         for ((i, t) in q.withIndex()) {
-            val row = LayoutBounds(list.x, list.y + i * (rowH + 4f), list.width, rowH)
-            if (row.y > list.bottom) break
+            val row = LayoutBounds(list.x, list.y + i * step - queuePos, list.width, rowH)
+            if (row.bottom < list.y || row.y > list.bottom) continue
             val active = cur != null && t.key == cur.key
             ui.card(row, if (active) Theme.CARD_HOVER else Theme.CARD, 9f)
             ui.drawCover(LayoutBounds(row.x + 7f, row.y + 7f, rowH - 14f, rowH - 14f), CoverCache.track(t), 6f)
@@ -112,10 +142,10 @@ internal class NowPlayingPage(private val screen: MusicScreen) {
         drawControls(LayoutBounds(area.x, area.bottom - controlsH, area.width, controlsH))
     }
 
-    /** Lima tombol bulat: repeat, prev, play/pause (besar), next, shuffle */
+    /** Lima tombol bulat di atas, volume di bawahnya */
     private fun drawControls(area: LayoutBounds) {
         val d = 44f
-        val cy = area.y + area.height / 2f
+        val cy = area.y + 34f
         val step = area.width / 5f
         fun cx(i: Int) = area.x + step * (i + 0.5f)
         val module = DangoMusic.instance.moduleManager.get(NeteaseMusicModule::class.java)
@@ -124,6 +154,7 @@ internal class NowPlayingPage(private val screen: MusicScreen) {
         playPause(cx(2), cy, 56f)
         circle(cx(3), cy, d, false, "▶") { MusicPlayer.next() }
         circle(cx(4), cy, d, MusicPlayer.shuffle, "⇄") { module.toggleShuffle() }
+        drawVolume(LayoutBounds(area.x + 18f, area.bottom - 22f, area.width - 36f, 16f))
     }
 
     private fun circle(cx: Float, cy: Float, d: Float, on: Boolean, glyph: String, action: () -> Unit) {
@@ -145,10 +176,25 @@ internal class NowPlayingPage(private val screen: MusicScreen) {
         ui.hits += b to { MusicPlayer.togglePause() }
     }
 
-    /** Kanan: cover di tengah, kotak judul, lalu panel lirik yang mengikuti posisi lagu */
+    /** Slider volume: klik untuk mengatur, sama dengan volume di dock pemutar */
+    private fun drawVolume(r: LayoutBounds) {
+        val track = LayoutBounds(r.x, r.y + 5f, r.width, 6f)
+        ui.card(track, Theme.CARD, 3f)
+        val v = MusicPlayer.volume.coerceIn(0f, 1f)
+        ui.card(LayoutBounds(track.x, track.y, max(6f, track.width * v), track.height), RED, 3f)
+        ui.card(LayoutBounds(track.x + track.width * v - 6f, track.y - 3f, 12f, 12f), Theme.TEXT_PRIMARY, 6f)
+        ui.hits += r.expand(0f, 8f) to { setVolume(((ui.mx - r.x) / r.width).coerceIn(0f, 1f)) }
+    }
+
+    private fun setVolume(v: Float) {
+        DangoMusic.instance.moduleManager.get(NeteaseMusicModule::class.java).setVolume(v)
+        MusicPlayer.volume = v
+    }
+
+    /** Kanan: cover di tengah, kotak judul, lalu panel lirik yang bisa di-scroll */
     private fun drawPanel(area: LayoutBounds) {
         val cur = MusicPlayer.current
-        val side = minOf(area.width, area.height * 0.5f)
+        val side = min(area.width, area.height * 0.5f)
         val cover = LayoutBounds(area.x + (area.width - side) / 2f, area.y, side, side)
         ui.drawCover(cover, cur?.let { CoverCache.track(it) }, 14f)
 
@@ -162,6 +208,7 @@ internal class NowPlayingPage(private val screen: MusicScreen) {
 
         val lyricBox = LayoutBounds(area.x, titleBox.bottom + 12f, area.width, area.bottom - titleBox.bottom - 12f)
         ui.card(lyricBox, Theme.CARD, 14f)
+        lyricArea = lyricBox
         if (cur == null) {
             centered(I18n.text("Nothing playing"), cx, lyricBox.y + lyricBox.height / 2f - 7f, 12f, Theme.TEXT_TERTIARY)
             return
@@ -174,16 +221,23 @@ internal class NowPlayingPage(private val screen: MusicScreen) {
             return
         }
         val idx = max(0, lyrics!!.indexAt(MusicPlayer.positionMs))
+        if (idx != lastIdx) {            // lagu sudah pindah baris: kembali mengikuti lirik
+            lastIdx = idx
+            lyricScroll = 0f
+        }
+        val maxScroll = lines.size * 32f
+        lyricScroll = lyricScroll.coerceIn(-maxScroll, maxScroll)
         val mid = lyricBox.y + lyricBox.height / 2f
         ui.beginClip(lyricBox)
-        for (k in -3..3) {
-            val j = idx + k
-            if (j < 0 || j >= lines.size) continue
+        for (j in max(0, idx - 14)..min(lines.size - 1, idx + 14)) {
+            val k = j - idx
+            val y = mid + k * 32f - lyricScroll
+            if (y < lyricBox.y - 20f || y > lyricBox.bottom) continue
             val active = k == 0
             val size = if (active) 16f else 12f
+            val font = if (active) Theme.FONT_SEMIBOLD else Theme.FONT_REGULAR
             val color = if (active) Theme.TEXT_PRIMARY else Theme.TEXT_TERTIARY
-            centered(ui.trim(lines[j].text, lyricBox.width - 24f, size, if (active) Theme.FONT_SEMIBOLD else Theme.FONT_REGULAR),
-                cx, mid + k * 32f - (if (active) 8f else 6f), size, color, if (active) Theme.FONT_SEMIBOLD else Theme.FONT_REGULAR)
+            centered(ui.trim(lines[j].text, lyricBox.width - 24f, size, font), cx, y - (if (active) 8f else 6f), size, color, font)
         }
         ui.endClip()
     }

@@ -103,7 +103,16 @@ object CoverCache {
     }
 
     /** 取封面；还没有就去下载，先返回 null（画占位） */
-    fun get(key: String, url: String): Texture? {
+    /** Cover Netease: minta ukuran 500x500 (bukan kecil 90/130). Sumber lain dibiarkan. */
+    private fun hdCoverUrl(u: String): String {
+        if (!u.contains("music.126.net") && !u.contains("music.163.com")) return u
+        val re = Regex("param=\\d+y\\d+")
+        return if (re.containsMatchIn(u)) u.replace(re, "param=500y500")
+        else u + (if (u.contains("?")) "&" else "?") + "param=500y500"
+    }
+
+    fun get(key: String, rawUrl: String): Texture? {
+        val url = hdCoverUrl(rawUrl)
         textures[key]?.let {
             lastUsed[key] = now
             return it

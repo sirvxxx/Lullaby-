@@ -64,6 +64,13 @@ object YoutubeMusicSource : MusicSourceApi {
     /** Charts: lagu chart YouTube Music (urutan asli) */
     fun chartTracksNow(): List<NeteaseTrack> = playlistTracks(CHARTS_ID)
 
+    /** Cadangan kalau chart/trending kosong: hasil pencarian beberapa kueri populer (pencarian sudah jalan di app) */
+    fun fallbackSongs(): List<NeteaseTrack> =
+        listOf("top hits this week", "trending songs", "viral songs 2026", "lagu indonesia terpopuler")
+            .flatMap { q -> try { search(q) } catch (_: Exception) { emptyList() } }
+            .distinctBy { it.nativeId }
+            .take(60)
+
     @Synchronized private fun chartTracks(): List<NeteaseTrack> {
         val now = System.currentTimeMillis()
         chartCache?.let { if (now - it.first < CACHE_MS) return it.second }
