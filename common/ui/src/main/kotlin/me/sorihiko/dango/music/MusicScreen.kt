@@ -11,6 +11,8 @@ import me.sorihiko.dango.musicui.Library
 import me.sorihiko.dango.musicui.TrackCardGrid
 import me.sorihiko.dango.musicui.NowPlayingPage
 import me.sorihiko.dango.musicui.QueuePage
+import me.sorihiko.dango.musicui.IslandPanel
+import me.sorihiko.dango.musicui.IslandState
 import me.sorihiko.dango.music.CloudDrives
 import me.sorihiko.dango.musicui.LoginDialog
 import me.sorihiko.dango.musicui.Page
@@ -318,6 +320,19 @@ class MusicScreen(
 
     /** 每帧调用 */
     @JvmOverloads
+    /** true = hanya panel island yang di-expand (dibuka dengan menahan Alt) */
+    var islandOnly = false
+    private val island = IslandPanel(this)
+    /** posisi animasi island: 0 = pill, 1 = panel penuh */
+    private var islandT = 0f
+
+    /** Dari panel island: buka GUI penuh dengan kotak search aktif */
+    internal fun openSearchFromIsland() {
+        islandOnly = false
+        IslandState.open = false
+        sidebar.searchFocused = true
+    }
+
     fun render(menuBackdropReady: Boolean = false) {
         if (closed) return
         val alpha = opacity(System.currentTimeMillis())
@@ -334,6 +349,27 @@ class MusicScreen(
         ui.mx = (platform.mouseX / scale).toInt()
         ui.my = (platform.mouseY / scale).toInt()
         val ctx = ui.ctx
+        if (!islandOnly) IslandState.open = false
+        if (islandOnly) {
+            // animasi: naik saat Alt ditahan, turun saat dilepas; tutup setelah kembali ke pill
+            val held = platform.isKeyDown(Keys.LEFT_ALT)
+            islandT += ((if (held) 1f else 0f) - islandT) * 0.2f
+            if (!held && islandT < 0.02f) {
+                IslandState.open = false
+                islandT = 0f
+                closed = true
+                closeScreen()
+                return
+            }
+            ui.hits.clear()
+            ctx.begin(false, ui.mx, ui.my)
+            try {
+                island.draw(ui.lw, islandT)
+            } finally {
+                ctx.end()
+            }
+            return
+        }
         // 没有世界时原版不会在播放器下面重画背景。先覆盖上一帧，
         // 否则玻璃会反复采样自身，饱和度不断累积，最终变成亮粉色。
         if (platform.player == null && !menuBackdropReady) {

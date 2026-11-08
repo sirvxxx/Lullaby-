@@ -85,6 +85,9 @@ interface Platform {
     /** 打开内置播放器 */
     fun openMusicScreen()
 
+    /** Panel island yang di-expand (tahan Alt). Default: buka GUI penuh. */
+    fun openIslandScreen() = openMusicScreen()
+
     // ---------------------------------------------------------------- 声音
 
     /**

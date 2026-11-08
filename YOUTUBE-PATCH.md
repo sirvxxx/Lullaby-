@@ -89,3 +89,9 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Login Spotify: cookie sp_dc dipakai untuk token Web API atas nama akun (dicoba pertama saat impor).
 - Perbaikan build: HiddenPlaylists menulis id lewat JsonPrimitive (Gson versi ini tidak punya add(Long)).
 - Perbaikan build: Library.status setter dibuat publik (MusicScreen menulis status login/hapus).
+- Dynamic Island (horizontal): jam real-time (HH:mm) di kiri cover. Bisa dimatikan lewat pengaturan "Clock".
+- Playlist impor tidak hilang lagi: softRefresh (dipanggil setelah login/refresh) sekarang menggabungkan playlist impor, seperti reloadPlaylists.
+- Dynamic Island: posisi hanya di atas (kiri, kanan, bawah dihapus dari pengaturan).
+- Belum dikerjakan: island interaktif (Alt untuk membebaskan kursor dan panel expand). Ini perlu hook input dan screen per versi.
+- Island interaktif (modern): tahan Alt saat ada lagu untuk membuka panel expand (cover, judul, progres, prev/play/next, volume, lirik, search bar). Lepas Alt untuk menutup. Klik search bar membuka GUI penuh dengan kotak search aktif. Legacy: Alt membuka GUI penuh.
+- Animasi island: kaca melebar dari pill ke panel (ease-out), isi memudar masuk setelah kaca hampir terbuka, di-clip ke kaca. Saat Alt dilepas panel menyusut kembali ke pill, lalu layar ditutup.

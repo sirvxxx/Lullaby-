@@ -49,7 +49,6 @@ internal class SettingsPage(private val screen: MusicScreen, private val module:
     private val choiceLabels = mapOf(
         "lyricColors" to listOf("Custom color", "Cover color", "Cover gradient", "Rainbow"),
         "audioOutput" to listOf("Auto", "Java Sound", "Game audio (OpenAL)"),
-        "position" to listOf("Top center", "Bottom center", "Left side", "Right side"),
     )
 
     /** 显示成百分比的选项 */

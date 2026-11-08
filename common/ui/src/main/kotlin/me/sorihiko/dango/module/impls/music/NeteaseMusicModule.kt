@@ -307,6 +307,11 @@ class NeteaseMusicModule : Module() {
         applyLanguage()
         MusicSources.selected = MusicSource.values()[musicSource.value]
         DangoMusic.instance.platform.syncKeyBindings(keyBindings)
+        // tahan Alt (saat ada lagu) untuk membuka panel island yang di-expand
+        if (!me.sorihiko.dango.musicui.IslandState.open && MusicPlayer.current != null && DangoMusic.instance.platform.isKeyDown(Keys.LEFT_ALT)) {
+            me.sorihiko.dango.musicui.IslandState.open = true
+            DangoMusic.instance.platform.openIslandScreen()
+        }
         UpdateChecker.tick(checkUpdates.get())
         // 快速玻璃（Potato）：全局开关，界面每帧读取；放在 enabled 检查之前，播放器关着也生效
         me.sorihiko.dango.Performance.lowEnd = fastGlass.get()

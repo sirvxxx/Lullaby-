@@ -8,6 +8,7 @@ object Keys {
     const val NONE = 0
     const val ESCAPE = 1
     const val BACK = 14
+    const val LEFT_ALT = 342   // GLFW_KEY_LEFT_ALT: tahan untuk membuka island yang di-expand
     const val TAB = 15
     const val RETURN = 28
     const val A = 30

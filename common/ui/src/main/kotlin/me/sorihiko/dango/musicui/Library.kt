@@ -282,7 +282,7 @@ internal object Library {
         val ids = tracksCache.keys.toList()
         worker.execute {
             val list = try { request.api.playlists() } catch (_: Exception) { emptyList() }
-            publish(request) { if (list.isNotEmpty()) playlists = list }
+            publish(request) { if (list.isNotEmpty()) playlists = (list + ImportedPlaylists.all().map { it.asPlaylist() }).distinctBy { it.id } }
             for (id in ids) {
                 val tracks = try { request.api.playlistTracks(id) } catch (_: Exception) { emptyList() }
                 publish(request) { if (tracks.isNotEmpty()) tracksCache[id] = tracks }

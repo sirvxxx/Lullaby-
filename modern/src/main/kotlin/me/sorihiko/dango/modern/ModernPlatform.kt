@@ -137,6 +137,11 @@ object ModernPlatform : Platform {
 
     override fun showChatMessage(message: String, copyText: String, copyHint: String): Boolean = McCompat.showChatMessage(message, copyText, copyHint)
 
+    override fun openIslandScreen() {
+        if (McCompat.glAvailable) McCompat.setScreen(ModernMusicScreen(McCompat.currentScreen(), islandOnly = true))
+        else { me.sorihiko.dango.musicui.IslandState.open = false; McCompat.notifyNoGl(again = true) }
+    }
+
     override fun openMusicScreen() {
         if (McCompat.glAvailable) McCompat.setScreen(ModernMusicScreen(McCompat.currentScreen())) else McCompat.notifyNoGl(again = true)
     }

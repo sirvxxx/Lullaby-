@@ -58,9 +58,6 @@ class DynamicIslandModule : Module() {
     @ModuleValue("Notify time", "How long song notifications stay (seconds)")
     private val notifyTime = FloatValue(1f, 8f, 3.5f, 1)
 
-    /** 0 = atas tengah, 1 = bawah tengah, 2 = sisi kiri (vertikal), 3 = sisi kanan (vertikal) */
-    @ModuleValue("Position", "Top center, bottom center, left side or right side (side = vertical layout)")
-    private val position = IntValue(0, 3, 0)
 
     @ModuleValue("Offset X", "Move the island sideways, in pixels")
     private val offsetX = IntValue(-400, 400, 0)
@@ -68,24 +65,15 @@ class DynamicIslandModule : Module() {
     @ModuleValue("Offset Y", "Move the island up or down, in pixels")
     private val offsetY = IntValue(-400, 400, 0)
 
-    private fun vertical() = position.value >= 2
+    private fun vertical() = false   // hanya di atas
 
     /** Ukuran yang dipakai: di sisi layar lebarnya dan tingginya ditukar (pil berdiri tegak) */
     private fun dims(kind: Kind): Pair<Float, Float> =
         if (vertical() && kind == Kind.SONG) 72f to 150f          // pil sisi: cover bulat + batang visualizer
         else sizeOf(kind).let { (w0, h0) -> if (vertical()) h0 to w0 else w0 to h0 }
 
-    private fun pillPosition(lw: Float, lh: Float, edge: Float, margin: Float): LayoutBounds {
-        val x: Float
-        val y: Float
-        when (position.value) {
-            1 -> { x = (lw - w) / 2f; y = lh - h - edge }
-            2 -> { x = margin; y = (lh - h) / 2f }
-            3 -> { x = lw - w - margin; y = (lh - h) / 2f }
-            else -> { x = (lw - w) / 2f; y = edge }
-        }
-        return LayoutBounds(x + offsetX.value, y + offsetY.value, w, h)
-    }
+    private fun pillPosition(lw: Float, lh: Float, edge: Float, margin: Float): LayoutBounds =
+        LayoutBounds((lw - w) / 2f + offsetX.value, edge + offsetY.value, w, h)
 
     private enum class Kind { IDLE, SONG, UPDATE }
 
@@ -184,7 +172,7 @@ class DynamicIslandModule : Module() {
                 width(t.name, 14f, Theme.FONT_SEMIBOLD).coerceAtMost(260f),
                 width(t.artists.joinToString(" / "), 11f).coerceAtMost(260f),
             )
-            (76f + max(tw, 150f) + 44f) to 76f
+            (clockW() + 76f + max(tw, 150f) + 44f) to 76f
         }
         Kind.UPDATE -> {
             val tw = max(width(updateTitle(), 13f, Theme.FONT_SEMIBOLD), width(I18n.text("Copy the download link in the player's settings"), 11f))
@@ -343,7 +331,9 @@ class DynamicIslandModule : Module() {
 
     private fun drawSong(ctx: GuiCanvas, b: LayoutBounds) {
         val t = MusicPlayer.current ?: return
-        val cover = LayoutBounds(b.x + 10f, b.y + 10f, 56f, 56f)
+        val clockW = clockW()
+        if (clockW > 0f) text(ctx, clockText(), b.x + 12f, b.y + (b.height - 16f) / 2f, 14f, Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
+        val cover = LayoutBounds(b.x + 10f + clockW, b.y + 10f, 56f, 56f)
         drawCover(ctx, cover, CoverCache.trackRounded(t) ?: CoverCache.track(t))
         val playing = MusicPlayer.state == MusicPlayer.State.PLAYING
         val tx = cover.right + 10f
@@ -367,6 +357,15 @@ class DynamicIslandModule : Module() {
             ctx.drawShape(LayoutBounds(bar.x, bar.y, max(3f, bar.width * f), bar.height), ShapeStyle(Theme.TEXT_PRIMARY, 1.5f))
         }
     }
+
+    @ModuleValue("Clock", "Show the real-time clock to the left of the cover")
+    private val showClock = BooleanValue(true)
+
+    /** Jam sekarang (HH:mm), dihitung ulang setiap frame */
+    private fun clockText(): String = java.time.LocalTime.now().let { "%02d:%02d".format(it.hour, it.minute) }
+
+    /** Lebar yang dipakai jam (0 kalau dimatikan) */
+    private fun clockW(): Float = if (showClock.get()) width(clockText(), 14f, Theme.FONT_SEMIBOLD) + 14f else 0f
 
     private val sideBars = FloatArray(11)
 

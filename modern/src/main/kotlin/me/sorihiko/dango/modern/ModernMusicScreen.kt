@@ -13,11 +13,14 @@ import net.minecraft.network.chat.Component
 class ModernMusicScreen(
     /** 关闭后回到哪个界面（null = 回到游戏） */
     private val parent: Screen?,
+    /** true = hanya panel island yang di-expand (dibuka dengan menahan Alt) */
+    private val islandOnly: Boolean = false,
 ) : CompatScreen(Component.literal("Dango Music")) {
 
     private val screen = DangoClient.newMusicScreen { McCompat.setScreen(parent) }
 
     override fun init() {
+        screen.islandOnly = islandOnly
         screen.opened()
     }
 
