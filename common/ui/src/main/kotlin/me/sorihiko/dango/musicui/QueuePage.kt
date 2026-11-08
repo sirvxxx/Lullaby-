@@ -35,6 +35,11 @@ internal class QueuePage(private val screen: MusicScreen) {
             ui.text(I18n.text("Queue"), body.x, body.y, 22f, Theme.TEXT_PRIMARY, Theme.FONT_DISPLAY)
             ui.text(I18n.format("%d songs in queue", q.size), body.x, body.y + 30f, 11f, Theme.TEXT_SECONDARY, Theme.FONT_SEMIBOLD)
         }
+        if (q.isNotEmpty()) {
+            val label = I18n.text("Clear queue")
+            val w = ui.width(label, 12f, Theme.FONT_SEMIBOLD) + 36f
+            ui.pill(LayoutBounds(body.right - w, body.y, w, 30f), Theme.CARD, label, null) { MusicPlayer.clearQueue() }
+        }
         val top = body.y + 60f
         if (q.isEmpty()) {
             ui.text(I18n.text("Nothing in the queue yet"), body.x, top + 4f, 12f, Theme.TEXT_TERTIARY)

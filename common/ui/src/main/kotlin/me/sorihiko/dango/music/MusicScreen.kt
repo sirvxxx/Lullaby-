@@ -217,10 +217,55 @@ class MusicScreen(
 
     internal fun cancelRename() {
         renameTarget = null
+        pendingLogin = null
+        sidebar.searchLimit = 80
         sidebar.searchText = ""
     }
 
+    /** Login: kotak search dipakai untuk menempel cookie. Enter = simpan, Esc = batal. */
+    private var pendingLogin: String? = null
+
+    internal fun beginLogin(which: String) {
+        pendingLogin = which
+        sidebar.searchLimit = 20000
+        sidebar.searchText = ""
+        sidebar.searchFocused = true
+        Library.status = "Tempel cookie $which lalu tekan Enter"
+    }
+
+    /** Tampilkan / sembunyikan playlist yang disembunyikan */
+    private var showHidden = false
+
+    private fun drawAccountBar(body: LayoutBounds, hiddenCount: Int) {
+        var x = body.right
+        fun place(label: String, action: () -> Unit) {
+            val w = ui.width(label, 11f, Theme.FONT_SEMIBOLD) + 30f
+            x -= w
+            ui.pill(LayoutBounds(x, body.y + 2f, w, 28f), Theme.CARD, label, null, action)
+            x -= 8f
+        }
+        if (hiddenCount > 0 || showHidden) {
+            place(if (showHidden) I18n.text("Hide hidden") else I18n.format("Show hidden (%d)", hiddenCount)) { showHidden = !showHidden }
+        }
+        if (SpotifyAuth.loggedIn) place("Spotify · logout") { SpotifyAuth.logout(); Library.status = "Spotify: logout" }
+        else place("Login Spotify") { beginLogin("spotify") }
+        if (YoutubeAuth.loggedIn) place("YouTube · logout") { YoutubeAuth.logout(); Library.status = "YouTube: logout"; Library.reloadPlaylists() }
+        else place("Login YouTube") { beginLogin("youtube") }
+    }
+
     internal fun doSearch() {
+        pendingLogin?.let { which ->
+            val c = sidebar.searchText.trim()
+            pendingLogin = null
+            sidebar.searchLimit = 80
+            sidebar.searchText = ""
+            sidebar.searchFocused = false
+            if (c.isEmpty()) return
+            val ok = if (which == "youtube") YoutubeAuth.save(c) else SpotifyAuth.save(c)
+            Library.status = if (ok) "Login $which tersimpan" else "Cookie $which tidak valid"
+            if (ok) Library.reloadPlaylists()
+            return
+        }
         renameTarget?.let { target ->
             val name = sidebar.searchText.trim()
             renameTarget = null
@@ -564,8 +609,11 @@ class MusicScreen(
             Page.UP_NEXT -> queuePage.draw(body)
             Page.PLAYLISTS -> {
                 val cloud = CloudDrives.entry(MusicSources.selected)
-                val items = listOfNotNull(cloud) + Library.playlists.filterNot { it.id == CloudDrives.id(MusicSources.selected) }
+                val all = listOfNotNull(cloud) + Library.playlists.filterNot { it.id == CloudDrives.id(MusicSources.selected) }
+                val hiddenCount = all.count { HiddenPlaylists.isHidden(it.id) }
+                val items = if (showHidden) all else all.filterNot { HiddenPlaylists.isHidden(it.id) }
                 grid.draw(body, I18n.text("Playlist"), I18n.format("%d playlists", items.size), items, Library.playlistsLoading)
+                drawAccountBar(body, hiddenCount)
             }
             Page.PARTY -> ui.itemAnim(0) { party.draw(LayoutBounds(body.x, body.y, body.width, body.height - ui.bottomInset)) }
             Page.SETTINGS -> settings.draw(body)

@@ -29,6 +29,19 @@ object YoutubeAuth {
         return null
     }
 
+    /** Simpan cookie dari menu login. False kalau cookie tidak memuat SAPISID. */
+    fun save(raw: String): Boolean {
+        val c = raw.trim()
+        if (sapisid(c) == null) return false
+        file().parentFile?.mkdirs()
+        file().writeText(c, Charsets.UTF_8)
+        return true
+    }
+
+    fun logout() {
+        file().delete()
+    }
+
     val loggedIn: Boolean get() = cookie()?.let { sapisid(it) } != null
 
     /** Header untuk request login: Cookie + Authorization SAPISIDHASH <waktu>_<sha1(waktu sapisid origin)> */

@@ -292,6 +292,14 @@ object MusicPlayer {
         else if (i < cur) index = cur - 1
     }
 
+    /** 队列：清空，并停止播放 */
+    @Synchronized fun clearQueue() {
+        queue = emptyList()
+        index = -1
+        plannedNext = -1
+        stop()
+    }
+
     /** 随机挑一首开始播放（之后按 Shuffle 设置继续） */
     fun playRandom(tracks: List<NeteaseTrack>, radio: (() -> List<NeteaseTrack>)? = null) {
         if (tracks.isEmpty()) return

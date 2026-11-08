@@ -83,3 +83,7 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Halaman Queue (di bawah Charts): daftar antrean dengan tombol ↑ ↓ untuk mengatur urutan, × untuk menghapus. Logika di MusicPlayer.moveQueue / removeQueue.
 - Login YouTube Music (cookie): isi config/lullaby/youtube-cookie.txt dengan satu baris cookie dari browser. Playlist milik akun (FEmusic_liked_playlists) muncul di Playlist. Tanpa cookie, sumber YouTube tetap bisa dipakai seperti biasa.
 - Home mengikuti login: kalau cookie YouTube Music terpasang, Home menampilkan rekomendasi akun (FEmusic_home) berlabel "For you". Kalau belum, tetap trending.
+- Hide playlist: tombol Hide/Unhide di header playlist (semua sumber). Playlist tersembunyi disembunyikan dari grid; "Show hidden" untuk menampilkannya lagi.
+- Clear queue: tombol Clear queue di halaman Queue.
+- Login lewat aplikasi: tombol Login YouTube / Login Spotify di halaman Playlist. Klik, tempel cookie di kotak search, tekan Enter. Tidak perlu file manual.
+- Login Spotify: cookie sp_dc dipakai untuk token Web API atas nama akun (dicoba pertama saat impor).

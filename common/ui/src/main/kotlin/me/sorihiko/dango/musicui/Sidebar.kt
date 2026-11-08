@@ -32,6 +32,8 @@ internal class Sidebar(private val screen: MusicScreen) {
 
     // 搜索框
     var searchText = ""
+    /** batas panjang teks di kotak ini (cookie login butuh jauh lebih panjang) */
+    var searchLimit = 80
     var searchFocused = false
     var searchRect = LayoutBounds()
         private set
@@ -456,10 +458,10 @@ internal class Sidebar(private val screen: MusicScreen) {
             DangoClient.platform.ctrlDown && keyCode == Keys.V -> {
                 // 游戏里打不了中文时，可以复制后粘贴进来
                 val clip = DangoClient.platform.clipboard.replace(Regex("[\\r\\n]"), " ")
-                searchText = (searchText + clip).take(80)
+                searchText = (searchText + clip).take(searchLimit)
             }
             DangoClient.platform.ctrlDown && keyCode == Keys.A -> searchText = ""
-            Keys.isAllowedChar(typedChar) -> searchText = (searchText + typedChar).take(80)
+            Keys.isAllowedChar(typedChar) -> searchText = (searchText + typedChar).take(searchLimit)
         }
         return true
     }

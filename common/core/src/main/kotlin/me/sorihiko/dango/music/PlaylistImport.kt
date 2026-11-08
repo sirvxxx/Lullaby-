@@ -191,6 +191,7 @@ object PlaylistImporter {
     /** Token anonim dari web player Spotify, lalu baca semua halaman lagu lewat Web API. null = gagal. */
     private fun spotifyApiRows(id: String, progress: (String) -> Unit): Pair<String, List<SpotifyRow>>? {
         for ((label, token) in listOfNotNull(
+            SpotifyAuth.token()?.let { "spotify login" to it },
             clientCredentialsToken()?.let { "client credentials" to it },
             webPlayerToken()?.let { "web player token" to it },
         )) {
