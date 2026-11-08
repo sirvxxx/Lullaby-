@@ -261,6 +261,37 @@ object MusicPlayer {
         plannedNext = -1
     }
 
+    /** 队列：把一首歌往上/往下挪（正在播的那首位置跟着走） */
+    @Synchronized fun moveQueue(from: Int, to: Int) {
+        val q = queue
+        if (from !in q.indices || to !in q.indices || from == to) return
+        val list = q.toMutableList()
+        val item = list.removeAt(from)
+        list.add(to, item)
+        val cur = index
+        index = when {
+            cur == from -> to
+            from < cur && to >= cur -> cur - 1
+            from > cur && to <= cur -> cur + 1
+            else -> cur
+        }
+        queue = list
+        plannedNext = -1
+    }
+
+    /** 队列：删掉一首。删的是正在播的那首，就接着播它原来位置的歌。 */
+    @Synchronized fun removeQueue(i: Int) {
+        val q = queue
+        if (i !in q.indices) return
+        val list = q.toMutableList().also { it.removeAt(i) }
+        val cur = index
+        queue = list
+        plannedNext = -1
+        if (list.isEmpty()) { stop(); index = -1; return }
+        if (i == cur) playIndex(minOf(i, list.size - 1))
+        else if (i < cur) index = cur - 1
+    }
+
     /** 随机挑一首开始播放（之后按 Shuffle 设置继续） */
     fun playRandom(tracks: List<NeteaseTrack>, radio: (() -> List<NeteaseTrack>)? = null) {
         if (tracks.isEmpty()) return

@@ -10,6 +10,7 @@ import me.sorihiko.dango.musicui.GridPage
 import me.sorihiko.dango.musicui.Library
 import me.sorihiko.dango.musicui.TrackCardGrid
 import me.sorihiko.dango.musicui.NowPlayingPage
+import me.sorihiko.dango.musicui.QueuePage
 import me.sorihiko.dango.music.CloudDrives
 import me.sorihiko.dango.musicui.LoginDialog
 import me.sorihiko.dango.musicui.Page
@@ -59,6 +60,7 @@ class MusicScreen(
     private val settings = SettingsPage(this, module)
     internal val trackGrid = TrackCardGrid(this)
     internal val nowPlaying = NowPlayingPage(this)
+    internal val queuePage = QueuePage(this)
 
     /** 有输入框在打字（搜索、筛选、房间码、代理、设置里改数值 / 颜色）：平台层据此让系统输入法可用 */
     val textInputActive: Boolean
@@ -532,6 +534,7 @@ class MusicScreen(
         grid.area = LayoutBounds()
         trackGrid.area = LayoutBounds()
         nowPlaying.queueArea = LayoutBounds()
+        queuePage.area = LayoutBounds()
         nowPlaying.lyricArea = LayoutBounds()
         tracks.area = LayoutBounds()
         settings.area = LayoutBounds()
@@ -557,6 +560,7 @@ class MusicScreen(
                 trackGrid.draw(body, I18n.text("Trending Music"), I18n.format("%d songs", t.size), t, Library.chartTracksLoading, true)
             }
             Page.QUEUE -> nowPlaying.draw(body)
+            Page.UP_NEXT -> queuePage.draw(body)
             Page.PLAYLISTS -> {
                 val cloud = CloudDrives.entry(MusicSources.selected)
                 val items = listOfNotNull(cloud) + Library.playlists.filterNot { it.id == CloudDrives.id(MusicSources.selected) }
@@ -645,6 +649,7 @@ class MusicScreen(
             sidebar.listArea.contains(lx, ly) -> sidebar.scrollBy(step)
             nowPlaying.queueArea.contains(lx, ly) -> nowPlaying.scrollQueue(wheel)
             nowPlaying.lyricArea.contains(lx, ly) -> nowPlaying.scrollLyric(wheel)
+            queuePage.area.contains(lx, ly) -> queuePage.scroll(wheel)
             trackGrid.area.contains(lx, ly) -> trackGrid.scroll(wheel)
             grid.area.contains(lx, ly) -> grid.scroll(wheel)
             artistPage.area.contains(lx, ly) -> artistPage.scroll(wheel)

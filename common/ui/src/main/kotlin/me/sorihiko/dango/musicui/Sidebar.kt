@@ -185,6 +185,7 @@ internal class Sidebar(private val screen: MusicScreen) {
 
         nav("⌂", I18n.text("Home"), page == Page.HOME, true) { screen.go(Page.HOME) }
         nav("▤", I18n.text("Charts"), page == Page.CHARTS, false) { screen.go(Page.CHARTS) }
+        nav("☰", I18n.text("Queue"), page == Page.UP_NEXT, false) { screen.go(Page.UP_NEXT) }
         nav("♫", I18n.text("Now Playing"), page == Page.QUEUE, false) { screen.go(Page.QUEUE) }
         nav("≡", I18n.text("Playlist"), page == Page.PLAYLISTS || page == Page.PLAYLIST, false) { screen.go(Page.PLAYLISTS) }
 

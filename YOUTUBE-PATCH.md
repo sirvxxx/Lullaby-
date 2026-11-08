@@ -80,3 +80,5 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Dibatalkan: warna aksen dari cover (percobaan 3) dan sudut cover membulat di Home/Charts (percobaan 5). Romaji tetap.
 - Dynamic Island samping: kembali abu-abu seperti top/bottom; yang berubah hanya visualizer (batang horizontal mengikuti audio).
 - Now Playing: halo dan garis highlight dihapus, cover membulat, kotak judul lebih rapi.
+- Halaman Queue (di bawah Charts): daftar antrean dengan tombol ↑ ↓ untuk mengatur urutan, × untuk menghapus. Logika di MusicPlayer.moveQueue / removeQueue.
+- Login YouTube Music (cookie): isi config/lullaby/youtube-cookie.txt dengan satu baris cookie dari browser. Playlist milik akun (FEmusic_liked_playlists) muncul di Playlist. Tanpa cookie, sumber YouTube tetap bisa dipakai seperti biasa.

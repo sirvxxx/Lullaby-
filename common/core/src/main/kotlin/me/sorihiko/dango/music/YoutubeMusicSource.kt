@@ -55,7 +55,7 @@ object YoutubeMusicSource : MusicSourceApi {
     override fun playlistTracks(id: Long): List<NeteaseTrack> = when (id) {
         CHARTS_ID -> chartTracks()
         TRENDING_ID -> chartTracks().shuffled()   // Home: urutan diacak setiap dibuka
-        else -> emptyList()
+        else -> libraryTracks(id)
     }
 
     /** Home: lagu trending (diacak setiap dipanggil) */
@@ -97,6 +97,90 @@ object YoutubeMusicSource : MusicSourceApi {
         return out.values.take(100)
     }
 
+    // ------------------------------------------------ akun: playlist milik sendiri (butuh cookie login)
+    private const val BROWSE_URL = "https://music.youtube.com/youtubei/v1/browse?prettyPrint=false"
+    private val libraryIds = HashMap<Long, String>()     // id di aplikasi -> browseId ("VL...")
+
+    override val libraryWarning: String
+        get() = if (YoutubeAuth.loggedIn) "" else "Tempel cookie YouTube Music ke config/lullaby/youtube-cookie.txt untuk melihat playlist kamu"
+
+    override fun playlists(): List<NeteasePlaylist> {
+        if (!YoutubeAuth.loggedIn) return emptyList()
+        val root = postJson(BROWSE_URL, browseBody("FEmusic_liked_playlists")) ?: return emptyList()
+        val out = ArrayList<NeteasePlaylist>()
+        val seen = HashSet<String>()
+        collectTwoRow(root) { name, browseId, cover ->
+            if (seen.add(browseId)) {
+                val id = MusicSources.stableId(MusicSource.YOUTUBE, "lib:$browseId")
+                synchronized(libraryIds) { libraryIds[id] = browseId }
+                out += NeteasePlaylist(id, name, 0, cover, owned = true)
+            }
+        }
+        return out
+    }
+
+    private fun libraryTracks(id: Long): List<NeteaseTrack> {
+        val browseId = synchronized(libraryIds) { libraryIds[id] } ?: return emptyList()
+        if (!YoutubeAuth.loggedIn) return emptyList()
+        val root = postJson(BROWSE_URL, browseBody(browseId))
+            ?: throw SourceAccessException("Playlist YouTube Music tidak bisa dibuka")
+        val out = LinkedHashMap<String, NeteaseTrack>()
+        collectItems(root) { r -> trackFromRenderer(r)?.let { out.putIfAbsent(it.nativeId, it) } }
+        return out.values.toList()
+    }
+
+    private fun browseBody(browseId: String): JsonObject {
+        val client = JsonObject().apply {
+            addProperty("clientName", "WEB_REMIX")
+            addProperty("clientVersion", REMIX_VERSION)
+            addProperty("hl", "en")
+            addProperty("gl", "US")
+        }
+        return JsonObject().apply {
+            add("context", JsonObject().apply { add("client", client) })
+            addProperty("browseId", browseId)
+        }
+    }
+
+    /** Baris playlist di halaman library (musicTwoRowItemRenderer): judul, browseId "VL...", cover */
+    private fun collectTwoRow(e: JsonElement, onItem: (String, String, String) -> Unit) {
+        if (e.isJsonObject) {
+            val o = e.asJsonObject
+            o.get("musicTwoRowItemRenderer")?.takeIf { it.isJsonObject }?.asJsonObject?.let { r ->
+                val title = r.get("title")?.takeIf { it.isJsonObject }?.asJsonObject
+                    ?.get("runs")?.takeIf { it.isJsonArray }?.asJsonArray?.firstOrNull()
+                    ?.takeIf { it.isJsonObject }?.asJsonObject?.get("text")?.takeIf { it.isJsonPrimitive }?.asString
+                val browseId = findBrowseId(r)
+                if (!title.isNullOrBlank() && browseId != null && browseId.startsWith("VL")) {
+                    onItem(title, browseId, coverOfRow(r))
+                }
+            }
+            for (v in o.entrySet().map { it.value }) collectTwoRow(v, onItem)
+        } else if (e.isJsonArray) {
+            for (v in e.asJsonArray) collectTwoRow(v, onItem)
+        }
+    }
+
+    private fun findBrowseId(e: JsonElement): String? {
+        if (e.isJsonObject) {
+            val o = e.asJsonObject
+            o.get("browseId")?.takeIf { it.isJsonPrimitive }?.asString?.let { return it }
+            for (v in o.entrySet().map { it.value }) findBrowseId(v)?.let { return it }
+        } else if (e.isJsonArray) {
+            for (v in e.asJsonArray) findBrowseId(v)?.let { return it }
+        }
+        return null
+    }
+
+    private fun coverOfRow(r: JsonObject): String {
+        val thumbs = r.get("thumbnailRenderer")?.takeIf { it.isJsonObject }?.asJsonObject
+            ?.get("musicThumbnailRenderer")?.takeIf { it.isJsonObject }?.asJsonObject
+            ?.get("thumbnail")?.takeIf { it.isJsonObject }?.asJsonObject
+            ?.get("thumbnails")?.takeIf { it.isJsonArray }?.asJsonArray
+        return thumbs?.lastOrNull()?.takeIf { it.isJsonObject }?.asJsonObject
+            ?.get("url")?.takeIf { it.isJsonPrimitive }?.asString.orEmpty()
+    }
+
     private fun postJson(url: String, body: JsonObject): JsonObject? {
         val conn = URL(url).openConnection() as HttpURLConnection
         return try {
@@ -110,6 +194,7 @@ object YoutubeMusicSource : MusicSourceApi {
             conn.setRequestProperty("Referer", "https://music.youtube.com/")
             conn.setRequestProperty("X-YouTube-Client-Name", "67")
             conn.setRequestProperty("X-YouTube-Client-Version", REMIX_VERSION)
+            YoutubeAuth.authHeaders()?.forEach { (k, v) -> conn.setRequestProperty(k, v) }
             conn.outputStream.use { it.write(body.toString().toByteArray(Charsets.UTF_8)) }
             if (conn.responseCode !in 200..299) {
                 DangoLogger.warn("YouTube Music {} -> HTTP {}", url.substringBefore('?'), conn.responseCode)
