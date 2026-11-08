@@ -12,7 +12,7 @@ import me.sorihiko.dango.utils.Color
 import kotlin.math.max
 
 /** Status island yang sedang di-expand (dibuka dengan menahan Alt) */
-internal object IslandState {
+object IslandState {
     @Volatile var open = false
 }
 
