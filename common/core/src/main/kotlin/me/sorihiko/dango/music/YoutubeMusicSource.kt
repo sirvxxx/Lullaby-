@@ -61,6 +61,15 @@ object YoutubeMusicSource : MusicSourceApi {
     /** Home: lagu trending (diacak setiap dipanggil) */
     fun trendingTracks(): List<NeteaseTrack> = playlistTracks(TRENDING_ID)
 
+    /** Home: kalau sudah login, rekomendasi akun (FEmusic_home); kalau belum, trending */
+    fun homeTracks(): List<NeteaseTrack> {
+        if (!YoutubeAuth.loggedIn) return trendingTracks()
+        val root = postJson(BROWSE_URL, browseBody("FEmusic_home")) ?: return trendingTracks()
+        val out = LinkedHashMap<String, NeteaseTrack>()
+        collectItems(root) { r -> trackFromRenderer(r)?.let { out.putIfAbsent(it.nativeId, it) } }
+        return if (out.isEmpty()) trendingTracks() else out.values.toList().take(100)
+    }
+
     /** Charts: lagu chart YouTube Music (urutan asli) */
     fun chartTracksNow(): List<NeteaseTrack> = playlistTracks(CHARTS_ID)
 

@@ -82,3 +82,4 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Now Playing: halo dan garis highlight dihapus, cover membulat, kotak judul lebih rapi.
 - Halaman Queue (di bawah Charts): daftar antrean dengan tombol ↑ ↓ untuk mengatur urutan, × untuk menghapus. Logika di MusicPlayer.moveQueue / removeQueue.
 - Login YouTube Music (cookie): isi config/lullaby/youtube-cookie.txt dengan satu baris cookie dari browser. Playlist milik akun (FEmusic_liked_playlists) muncul di Playlist. Tanpa cookie, sumber YouTube tetap bisa dipakai seperti biasa.
+- Home mengikuti login: kalau cookie YouTube Music terpasang, Home menampilkan rekomendasi akun (FEmusic_home) berlabel "For you". Kalau belum, tetap trending.

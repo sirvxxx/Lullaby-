@@ -177,7 +177,7 @@ internal object Library {
         if (trendingLoading) return
         trendingLoading = true
         worker.execute {
-            val r0 = try { me.sorihiko.dango.music.YoutubeMusicSource.trendingTracks() } catch (e: Exception) { emptyList() }
+            val r0 = try { me.sorihiko.dango.music.YoutubeMusicSource.homeTracks() } catch (e: Exception) { emptyList() }
             val r = r0.ifEmpty { try { me.sorihiko.dango.music.YoutubeMusicSource.fallbackSongs() } catch (e: Exception) { emptyList() } }
             trending = if (r.isEmpty()) null else r.shuffled()
             trendingLoading = false

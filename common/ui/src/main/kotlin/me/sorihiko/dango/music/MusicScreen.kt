@@ -553,7 +553,8 @@ class MusicScreen(
         when (s.page) {
             Page.HOME -> {
                 val t = Library.trending ?: emptyList()
-                trackGrid.draw(body, I18n.text("Welcome to LULLABY+!"), I18n.format("Trending now · %d songs", t.size), t, Library.trendingLoading, false)
+                val label = if (YoutubeAuth.loggedIn) "For you" else "Trending now"
+                trackGrid.draw(body, I18n.text("Welcome to LULLABY+!"), "$label · ${t.size} songs", t, Library.trendingLoading, false)
             }
             Page.CHARTS -> {
                 val t = Library.chartTracks ?: emptyList()
