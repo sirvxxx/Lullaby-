@@ -14,6 +14,7 @@ import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import javax.imageio.ImageIO
+import kotlin.math.max
 import kotlin.math.min
 
 /**
@@ -159,7 +160,30 @@ object CoverCache {
         return null
     }
 
-    fun track(t: NeteaseTrack) = get("t:${t.key}", t.coverUrl)
+    /** sudut cover dibulatkan di tekstur (drawCover tidak memotong sudut sendiri) */
+    fun track(t: NeteaseTrack) = trackRounded(t) ?: get("t:${t.key}", t.coverUrl)
+
+    private val accents = HashMap<String, Triple<Float, Float, Float>>()
+
+    /** Warna dominan cover (dibobot ke warna yang paling jenuh). null = gambar belum siap. */
+    @Synchronized fun accent(t: NeteaseTrack): Triple<Float, Float, Float>? {
+        val key = "t:${t.key}"
+        accents[key]?.let { return it }
+        val img = sources[key] ?: return null
+        var r = 0.0; var g = 0.0; var b = 0.0; var wsum = 0.0
+        val step = maxOf(1, img.width / 32)
+        for (y in 0 until img.height step step) for (x in 0 until img.width step step) {
+            val p = img.getRGB(x, y)
+            val pr = ((p shr 16) and 255) / 255.0; val pg = ((p shr 8) and 255) / 255.0; val pb = (p and 255) / 255.0
+            val mx = max(pr, max(pg, pb)); val mn = min(pr, min(pg, pb))
+            val sat = if (mx > 0.0) (mx - mn) / mx else 0.0
+            val w = if (mx > 0.15) 0.15 + sat else 0.0      // abaikan piksel hampir hitam
+            r += pr * w; g += pg * w; b += pb * w; wsum += w
+        }
+        if (wsum <= 0.0) return null
+        if (accents.size > 400) accents.clear()
+        return Triple((r / wsum).toFloat(), (g / wsum).toFloat(), (b / wsum).toFloat()).also { accents[key] = it }
+    }
 
     private const val ROUND_SUFFIX = "#r"
 

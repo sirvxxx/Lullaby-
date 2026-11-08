@@ -189,10 +189,18 @@ object LyricsProvider {
      * 按网易云歌曲 ID 取歌词。优先拿逐字歌词（yrc，每个字都有时间，文闪用），
      * 拿不到再用普通 LRC。
      */
+    /** Lirik yang memakai huruf non-Latin (Jepang, Mandarin, Korea, Rusia, dll) diganti versi romanisasi dari NetEase */
+    private fun useRoma(lines: List<LyricLine>, roma: List<LyricLine>?): List<LyricLine> {
+        if (roma == null) return lines
+        val nonLatin = lines.any { l -> l.text.any { it.isLetter() && it.code > 0x024F } }
+        return if (nonLatin) roma else lines
+    }
+
     fun neteaseLyricById(id: Long): Lyrics? {
         var lrcText: String? = null
         var yrcText: String? = null
         var transText: String? = null
+        var romaText: String? = null
         val urls = listOf(
             "https://music.163.com/api/song/lyric/v1?id=$id&cp=false&lv=0&kv=0&tv=0&rv=0&yv=0&ytv=0&yrv=0",
             "https://music.163.com/api/song/lyric?id=$id&lv=-1&kv=-1&tv=-1&yv=-1",
@@ -207,14 +215,16 @@ object LyricsProvider {
                 if (lrcText == null) lrcText = lyricField(o, "lrc")
                 if (yrcText == null) yrcText = lyricField(o, "yrc")
                 if (transText == null) transText = lyricField(o, "tlyric")
+                if (romaText == null) romaText = lyricField(o, "romalrc")
             } catch (e: Exception) {
                 DangoLogger.warn("NetEase lyric request failed: {}", e.toString())
             }
         }
         val trans = transText?.let { parseLrc(it) } ?: emptyList()
+        val roma = romaText?.let { parseLrc(it) }?.takeIf { it.isNotEmpty() }
         yrcText?.let { y ->
             val lines = parseYrc(y)
-            if (lines.isNotEmpty()) return Lyrics(withTranslation(lines, trans), "NetEase")
+            if (lines.isNotEmpty()) return Lyrics(useRoma(withTranslation(lines, trans), roma), "NetEase")
         }
         val lines = lrcText?.let { parseLrc(it) } ?: return null
         return if (lines.isEmpty()) null else Lyrics(withTranslation(lines, trans), "NetEase")

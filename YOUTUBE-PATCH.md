@@ -73,3 +73,7 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Playlist impor: tombol Rename (lewat kotak search; Enter simpan, Esc batal) dan Delete di header playlist.
 - Grid Playlist: duplikat ID dibersihkan.
 - Dynamic Island: bar sedikit lebih sensitif.
+- Romaji: lirik non-Latin (Jepang/Mandarin/Korea/Rusia) diganti romalrc dari NetEase.
+- Warna aksen mengikuti warna dominan cover (CoverCache.accent), dipakai untuk RED dan tint window.
+- Sudut cover dibulatkan di semua tampilan (CoverCache.track memakai tekstur rounded).
+- Now Playing: cover lebih kecil, kartu lebih rapi. Dynamic Island samping: pill hitam solid.

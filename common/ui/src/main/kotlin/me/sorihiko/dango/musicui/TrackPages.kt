@@ -145,13 +145,13 @@ internal class NowPlayingPage(private val screen: MusicScreen) {
 
     private fun drawPanel(area: LayoutBounds) {
         val cur = MusicPlayer.current
-        val side = min(area.width, area.height * 0.5f)
+        val side = min(area.width * 0.8f, area.height * 0.46f)
         val cover = LayoutBounds(area.x + (area.width - side) / 2f, area.y, side, side)
         // halo aksen di belakang cover: kedalaman dan warna, tanpa menutupi gambar
-        ui.card(LayoutBounds(cover.x - 16f, cover.y - 16f, side + 32f, side + 32f), RED.copy(a = 0.10f), 26f)
+        ui.card(LayoutBounds(cover.x - 14f, cover.y - 14f, side + 28f, side + 28f), RED.copy(a = 0.06f), 26f)
         ui.drawCover(cover, cur?.let { CoverCache.track(it) }, 14f)
 
-        val titleBox = LayoutBounds(area.x, cover.bottom + 14f, area.width, 58f)
+        val titleBox = LayoutBounds(area.x, cover.bottom + 12f, area.width, 52f)
         glassCard(titleBox, 14f)
         val cx = area.x + area.width / 2f
         if (cur != null) {

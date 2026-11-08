@@ -471,7 +471,23 @@ class MusicScreen(
 
     private val edgeGlow = me.sorihiko.dango.musicui.Spring(300f, 26f)
 
+    private var accentNow = Triple(0.62f, 0.66f, 0.72f)
+
+    /** Warna aksen ikut warna dominan cover yang sedang diputar (perlahan berganti) */
+    private fun updateAccent() {
+        val a = MusicPlayer.current?.let { CoverCache.accent(it) } ?: Triple(0.62f, 0.66f, 0.72f)
+        val k = 0.05f
+        accentNow = Triple(
+            accentNow.first + (a.first - accentNow.first) * k,
+            accentNow.second + (a.second - accentNow.second) * k,
+            accentNow.third + (a.third - accentNow.third) * k,
+        )
+        val (r, g, b) = accentNow
+        RED = Color(0.42f + r * 0.58f, 0.42f + g * 0.58f, 0.42f + b * 0.58f, 1f)
+    }
+
     private fun drawWindow(alpha: Float) {
+        updateAccent()
         val base = dragWin ?: savedWin()
         winRect = base
         val win = LayoutBounds(base.x, base.y + (1f - alpha) * 12f, base.width, base.height)
@@ -481,7 +497,7 @@ class MusicScreen(
                 ui.beginClip(win)
                 val side = maxOf(win.width, win.height) * 1.15f
                 ui.ctx.drawImage(LayoutBounds(win.x + (win.width - side) / 2f, win.y + (win.height - side) / 2f, side, side), tex)
-                ui.ctx.drawShape(win, ShapeStyle(Color(0.03f, 0.03f, 0.05f, 0.7f), Theme.GLASS_WINDOW.radius))
+                ui.ctx.drawShape(win, ShapeStyle(Color(accentNow.first * 0.16f, accentNow.second * 0.16f, accentNow.third * 0.16f, 0.72f), Theme.GLASS_WINDOW.radius))
                 ui.endClip()
             }
         }

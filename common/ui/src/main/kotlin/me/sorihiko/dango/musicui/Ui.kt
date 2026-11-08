@@ -16,7 +16,7 @@ import kotlin.math.min
 
 /** 网易云红（和菜单里 Music 分类同色） */
 /** 强调色：Lullaby 的磨砂银灰（按钮、进度、选中项） */
-internal val RED = Color.fromHex("#9AA4B6")
+internal var RED = Color.fromHex("#9AA4B6")
 /** 爱心（喜欢）保留粉色 */
 internal val LOVE = Color.fromHex("#FF375F")
 
