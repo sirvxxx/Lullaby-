@@ -72,7 +72,7 @@ class DynamicIslandModule : Module() {
 
     /** Ukuran yang dipakai: di sisi layar lebarnya dan tingginya ditukar (pil berdiri tegak) */
     private fun dims(kind: Kind): Pair<Float, Float> =
-        if (vertical() && kind == Kind.SONG) 72f to 140f          // pil sisi: cover bulat + batang visualizer
+        if (vertical() && kind == Kind.SONG) 72f to 150f          // pil sisi: cover bulat + batang visualizer
         else sizeOf(kind).let { (w0, h0) -> if (vertical()) h0 to w0 else w0 to h0 }
 
     private fun pillPosition(lw: Float, lh: Float, edge: Float, margin: Float): LayoutBounds {
@@ -267,7 +267,7 @@ class DynamicIslandModule : Module() {
             val r = min(h / 2f, 22f)
 
             ctx.pushScale(k, k, 1f)
-            if (glass.get() && !vertical()) {
+            if (glass.get()) {
                 ctx.drawGlass(pill, Theme.GLASS_WINDOW.copy(radius = r, shadow = ShadowStyle(Color(0f, 0f, 0f, 0.14f), 8f, Vec2(0f, -2f))))
             } else {
                 ctx.drawShape(
@@ -368,26 +368,28 @@ class DynamicIslandModule : Module() {
         }
     }
 
-    /** Mode samping: cover bulat di tengah atas, lalu batang audio vertikal yang bergerak (mirip Spotify) */
+    private val sideBars = FloatArray(11)
+
+    /** Mode samping: capsule seperti Dynamic Island atas tapi diputar. Cover bulat di atas, batang audio mengikuti volume lagu. */
     private fun drawSongVertical(ctx: GuiCanvas, b: LayoutBounds) {
         val t = MusicPlayer.current ?: return
         val cx = b.x + b.width / 2f
-        val d = 48f
-        val cover = LayoutBounds(cx - d / 2f, b.y + 12f, d, d)
+        val d = 46f
+        val cover = LayoutBounds(cx - d / 2f, b.y + 14f, d, d)
         ctx.drawShape(cover, ShapeStyle(Theme.TRACK, d / 2f))     // alas bulat dulu, supaya tepi cover tidak bolong
         CoverCache.upload()
         CoverCache.trackRounded(t, 0.5f)?.let { ctx.drawImage(cover, it) }
 
         val playing = MusicPlayer.state == MusicPlayer.State.PLAYING
-        val time = System.nanoTime() / 1e9
-        val n = 11
-        val step = 5.2f
+        val level = if (playing) MusicPlayer.levelAt(MusicPlayer.positionMs) else 0f
         val top = cover.bottom + 12f
+        val n = sideBars.size
+        val step = (b.bottom - 14f - top) / n
         for (i in 0 until n) {
-            val amp = if (playing)
-                0.25f + 0.75f * kotlin.math.abs(sin(time * (3.6 + i * 0.61) + i * 0.9)).toFloat()
-            else 0.25f
-            val w = 6f + 34f * amp
+            val shape = 0.55f + 0.45f * kotlin.math.abs(sin(i * 1.3)).toFloat()
+            val target = (0.06f + level * 3.4f * shape).coerceIn(0.06f, 1f)
+            sideBars[i] += (target - sideBars[i]) * 0.35f        // halus, tidak loncat
+            val w = 6f + 36f * sideBars[i]
             ctx.drawShape(
                 LayoutBounds(cx - w / 2f, top + i * step, w, 2.4f),
                 ShapeStyle(if (playing) Theme.TEXT_PRIMARY else Theme.TEXT_TERTIARY, 1.2f),

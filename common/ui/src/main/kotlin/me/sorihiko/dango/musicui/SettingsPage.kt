@@ -49,6 +49,7 @@ internal class SettingsPage(private val screen: MusicScreen, private val module:
     private val choiceLabels = mapOf(
         "lyricColors" to listOf("Custom color", "Cover color", "Cover gradient", "Rainbow"),
         "audioOutput" to listOf("Auto", "Java Sound", "Game audio (OpenAL)"),
+        "position" to listOf("Top center", "Bottom center", "Left side", "Right side"),
     )
 
     /** 显示成百分比的选项 */
@@ -269,7 +270,6 @@ internal class SettingsPage(private val screen: MusicScreen, private val module:
         val card = Src(mm.get(SongCardModule::class.java), fmts = mapOf("posX" to ::percent, "posY" to ::percent))
         val island = Src(mm.get(DynamicIslandModule::class.java), fmts = mapOf(
             "notifyTime" to { v: Any -> "%.1f s".format((v as FloatValue).value) },
-            "position" to { v: Any -> arrayOf("Top center", "Bottom center", "Left side", "Right side")[(v as IntValue).value] },
         ))
         // 先取走，免得落进下面的 Hotkeys 组
         val updates = player.take(listOf("checkUpdates"))

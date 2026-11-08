@@ -180,10 +180,8 @@ internal class Sidebar(private val screen: MusicScreen) {
         }
 
         // 顶部：LULLABY+ 标志（mockup）
-        ui.card(LayoutBounds(x + 2f, y + 9f, 8f, 8f), RED, 4f)
-        ui.text("LULLABY+", x + 18f, y + 2f, 18f, Theme.TEXT_PRIMARY, Theme.FONT_DISPLAY)
-        ui.text("music", x + 18f, y + 25f, 10f, Theme.TEXT_TERTIARY, Theme.FONT_SEMIBOLD)
-        y += 54f
+        ui.text("LULLABY+", x + 2f, y + 6f, 20f, Theme.TEXT_PRIMARY, Theme.FONT_DISPLAY)
+        y += 46f
 
         nav("⌂", I18n.text("Home"), page == Page.HOME, true) { screen.go(Page.HOME) }
         nav("▤", I18n.text("Charts"), page == Page.CHARTS, false) { screen.go(Page.CHARTS) }

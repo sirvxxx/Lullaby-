@@ -66,3 +66,6 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Now Playing: tombol bulat dihapus; antrean memakai seluruh tinggi.
 - Edge: garis putih hover di tepi window dihapus; dispersion (pinggiran pelangi) dimatikan; highlight kaca diturunkan.
 - Logo sidebar: LULLABY+ lebih besar, rata kiri, dengan titik aksen.
+- Sidebar: brand hanya "LULLABY+".
+- Dynamic Island: posisi (Top/Bottom/Left/Right) diganti klik-ganti, tanpa slider. Mode samping: capsule seperti mode atas diputar, cover bulat di atas, batang audio mengikuti level RMS lagu (MusicPlayer.levelAt).
+- Now Playing: kartu dengan kilau tepi, halo aksen di belakang cover, lirik berjalan pelan mengikuti baris aktif dengan glow lembut di baris yang sedang dinyanyikan.

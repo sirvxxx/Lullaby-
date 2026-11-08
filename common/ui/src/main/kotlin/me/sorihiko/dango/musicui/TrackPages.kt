@@ -9,6 +9,7 @@ import me.sorihiko.dango.music.MusicScreen
 import me.sorihiko.dango.music.NeteaseTrack
 import me.sorihiko.dango.ui.LayoutBounds
 import me.sorihiko.dango.ui.Theme
+import me.sorihiko.dango.utils.Color
 import kotlin.math.max
 import kotlin.math.min
 
@@ -77,8 +78,8 @@ internal class TrackCardGrid(private val screen: MusicScreen) {
 }
 
 /**
- * Now Playing (mockup): antrean di kiri (bisa di-scroll) + lima tombol bulat dan volume di bawah;
- * di kanan: cover, kotak judul, dan panel lirik (bisa di-scroll).
+ * Now Playing: antrean di kiri (bisa di-scroll). Kanan: cover dengan halo aksen, kotak judul,
+ * dan lirik yang berjalan pelan mengikuti baris aktif, dengan glow lembut di baris yang sedang dinyanyikan.
  */
 internal class NowPlayingPage(private val screen: MusicScreen) {
     private val ui = screen.ui
@@ -89,15 +90,17 @@ internal class NowPlayingPage(private val screen: MusicScreen) {
 
     private var queueTarget = 0f
     private var queuePos = 0f
-    private var lyricScroll = 0f      // px; lirik aktif berpusat di sini kalau 0
+    private var lyricPos = 0f        // posisi tampilan lirik (px), mengejar baris aktif pelan-pelan
+    private var lyricManual = 0f     // geseran manual dari roda mouse, meluruh kembali ke baris aktif
     private var lastIdx = -1
+    private val lineH = 40f
 
     fun scrollQueue(wheel: Int) {
         queueTarget += if (wheel > 0) -60f else 60f
     }
 
     fun scrollLyric(wheel: Int) {
-        lyricScroll += if (wheel > 0) -32f else 32f
+        lyricManual += if (wheel > 0) -40f else 40f
     }
 
     fun draw(body0: LayoutBounds) {
@@ -111,13 +114,12 @@ internal class NowPlayingPage(private val screen: MusicScreen) {
         drawPanel(right)
     }
 
-    private fun drawQueue(area: LayoutBounds) {
-        val list = LayoutBounds(area.x, area.y, area.width, area.height)
+    private fun drawQueue(list: LayoutBounds) {
         queueArea = list
         val q = MusicPlayer.queue
         val cur = MusicPlayer.current
-        val rowH = 46f
-        val step = rowH + 4f
+        val rowH = 48f
+        val step = rowH + 6f
         val maxScroll = max(0f, q.size * step - list.height)
         queueTarget = queueTarget.coerceIn(0f, maxScroll)
         queuePos = ui.approach(queuePos, queueTarget, 60f)
@@ -127,36 +129,38 @@ internal class NowPlayingPage(private val screen: MusicScreen) {
             val row = LayoutBounds(list.x, list.y + i * step - queuePos, list.width, rowH)
             if (row.bottom < list.y || row.y > list.bottom) continue
             val active = cur != null && t.key == cur.key
-            ui.card(row, if (active) Theme.CARD_HOVER else Theme.CARD, 9f)
-            ui.drawCover(LayoutBounds(row.x + 7f, row.y + 7f, rowH - 14f, rowH - 14f), CoverCache.track(t), 6f)
-            val tx = row.x + rowH + 4f
-            val tw = row.right - tx - 8f
-            ui.text(ui.trim(t.name, tw, 12f, Theme.FONT_SEMIBOLD), tx, row.y + 8f, 12f,
+            glassCard(row, 10f)
+            if (active) ui.card(LayoutBounds(row.x, row.y + 10f, 3f, rowH - 20f), RED, 1.5f)
+            ui.drawCover(LayoutBounds(row.x + 8f, row.y + 6f, rowH - 12f, rowH - 12f), CoverCache.track(t), 7f)
+            val tx = row.x + rowH + 6f
+            val tw = row.right - tx - 10f
+            ui.text(ui.trim(t.name, tw, 12f, Theme.FONT_SEMIBOLD), tx, row.y + 9f, 12f,
                 if (active) Theme.TEXT_PRIMARY else Theme.TEXT_SECONDARY, Theme.FONT_SEMIBOLD)
-            ui.text(ui.trim(t.artists.firstOrNull().orEmpty(), tw, 10f), tx, row.y + 25f, 10f, Theme.TEXT_TERTIARY)
+            ui.text(ui.trim(t.artists.firstOrNull().orEmpty(), tw, 10f), tx, row.y + 26f, 10f, Theme.TEXT_TERTIARY)
             ui.hits += row.intersect(list) to { MusicPlayer.playIndex(i) }
         }
         ui.endClip()
         if (q.isEmpty()) ui.text(I18n.text("Nothing in the queue yet"), list.x + 4f, list.y + 6f, 12f, Theme.TEXT_TERTIARY)
     }
 
-    /** Kanan: cover di tengah, kotak judul, lalu panel lirik yang bisa di-scroll */
     private fun drawPanel(area: LayoutBounds) {
         val cur = MusicPlayer.current
         val side = min(area.width, area.height * 0.5f)
         val cover = LayoutBounds(area.x + (area.width - side) / 2f, area.y, side, side)
+        // halo aksen di belakang cover: kedalaman dan warna, tanpa menutupi gambar
+        ui.card(LayoutBounds(cover.x - 16f, cover.y - 16f, side + 32f, side + 32f), RED.copy(a = 0.10f), 26f)
         ui.drawCover(cover, cur?.let { CoverCache.track(it) }, 14f)
 
-        val titleBox = LayoutBounds(area.x, cover.bottom + 12f, area.width, 56f)
-        ui.card(titleBox, Theme.CARD, 14f)
+        val titleBox = LayoutBounds(area.x, cover.bottom + 14f, area.width, 58f)
+        glassCard(titleBox, 14f)
         val cx = area.x + area.width / 2f
         if (cur != null) {
-            centered(ui.trim(cur.name, titleBox.width - 24f, 15f, Theme.FONT_SEMIBOLD), cx, titleBox.y + 10f, 15f, Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
-            centered(ui.trim(cur.artists.joinToString(" / "), titleBox.width - 24f, 11f), cx, titleBox.y + 32f, 11f, Theme.TEXT_SECONDARY)
+            centered(ui.trim(cur.name, titleBox.width - 28f, 15f, Theme.FONT_SEMIBOLD), cx, titleBox.y + 11f, 15f, Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
+            centered(ui.trim(cur.artists.joinToString(" / "), titleBox.width - 28f, 11f), cx, titleBox.y + 33f, 11f, Theme.TEXT_SECONDARY)
         }
 
-        val lyricBox = LayoutBounds(area.x, titleBox.bottom + 12f, area.width, area.bottom - titleBox.bottom - 12f)
-        ui.card(lyricBox, Theme.CARD, 14f)
+        val lyricBox = LayoutBounds(area.x, titleBox.bottom + 14f, area.width, area.bottom - titleBox.bottom - 14f)
+        glassCard(lyricBox, 16f)
         lyricArea = lyricBox
         if (cur == null) {
             centered(I18n.text("Nothing playing"), cx, lyricBox.y + lyricBox.height / 2f - 7f, 12f, Theme.TEXT_TERTIARY)
@@ -169,29 +173,52 @@ internal class NowPlayingPage(private val screen: MusicScreen) {
             centered(I18n.text(msg), cx, lyricBox.y + lyricBox.height / 2f - 7f, 12f, Theme.TEXT_TERTIARY)
             return
         }
+
         val idx = max(0, lyrics!!.indexAt(MusicPlayer.positionMs))
-        if (idx != lastIdx) {            // lagu sudah pindah baris: kembali mengikuti lirik
+        if (lastIdx == -1) lyricPos = idx * lineH
+        if (idx != lastIdx) {
             lastIdx = idx
-            lyricScroll = 0f
+            lyricManual = 0f
         }
-        val maxScroll = lines.size * 32f
-        lyricScroll = lyricScroll.coerceIn(-maxScroll, maxScroll)
+        val manualMax = lines.size * lineH
+        lyricManual = lyricManual.coerceIn(-manualMax, manualMax)
+        // jalan pelan: posisi mengejar baris aktif (atau geseran manual), lalu geseran manual meluruh
+        lyricPos = ui.approach(lyricPos, idx * lineH + lyricManual, 22f)
+        lyricManual *= 0.95f
+
         val mid = lyricBox.y + lyricBox.height / 2f
         ui.beginClip(lyricBox)
-        for (j in max(0, idx - 14)..min(lines.size - 1, idx + 14)) {
-            val k = j - idx
-            val y = mid + k * 32f - lyricScroll
-            if (y < lyricBox.y - 20f || y > lyricBox.bottom) continue
-            val active = k == 0
-            val size = if (active) 16f else 12f
+        for (j in max(0, idx - 18)..min(lines.size - 1, idx + 18)) {
+            val y = mid + j * lineH - lyricPos
+            if (y < lyricBox.y - 40f || y > lyricBox.bottom + 40f) continue
+            val dist = kotlin.math.abs(j - idx)
+            val active = dist == 0
+            val size = if (active) 17f else 13f
             val font = if (active) Theme.FONT_SEMIBOLD else Theme.FONT_REGULAR
-            val color = if (active) Theme.TEXT_PRIMARY else Theme.TEXT_TERTIARY
-            centered(ui.trim(lines[j].text, lyricBox.width - 24f, size, font), cx, y - (if (active) 8f else 6f), size, color, font)
+            val text = ui.trim(lines[j].text, lyricBox.width - 32f, size, font)
+            val tx = lyricBox.x + lyricBox.width / 2f
+            val ty = y - size / 2f
+            if (active) {
+                // glow lembut: salinan tipis berwarna aksen di sekitar teks, tidak menyilaukan
+                for ((dx, dy) in listOf(-1.5f to 0f, 1.5f to 0f, 0f to -1.5f, 0f to 1.5f)) {
+                    centered(text, tx + dx, ty + dy, size, RED.copy(a = 0.22f), font)
+                }
+                centered(text, tx, ty, size, Theme.TEXT_PRIMARY, font)
+            } else {
+                val alpha = (1f - dist * 0.22f).coerceIn(0.25f, 1f)
+                centered(text, tx, ty, size, Theme.TEXT_TERTIARY.copy(a = Theme.TEXT_TERTIARY.a * alpha), font)
+            }
         }
         ui.endClip()
     }
 
-    private fun centered(s: String, cx: Float, y: Float, size: Float, color: me.sorihiko.dango.utils.Color, font: String = Theme.FONT_REGULAR) {
+    /** kartu kaca: isi gelap transparan + kilau tipis di tepi atas */
+    private fun glassCard(b: LayoutBounds, r: Float) {
+        ui.card(b, Theme.CARD, r)
+        ui.card(LayoutBounds(b.x + r, b.y + 1f, b.width - 2f * r, 1f), Color(1f, 1f, 1f, 0.14f), 0.5f)
+    }
+
+    private fun centered(s: String, cx: Float, y: Float, size: Float, color: Color, font: String = Theme.FONT_REGULAR) {
         ui.text(s, cx - ui.width(s, size, font) / 2f, y, size, color, font)
     }
 }

@@ -76,6 +76,18 @@ object MusicPlayer {
     /** (歌曲内时间 ms, 强度 0..1)，解码时根据低频能量突增检测出来 */
     private class Beat(val timeMs: Long, val strength: Float)
     private val beats = ArrayDeque<Beat>()
+    /** 每一帧解码后的音量（RMS），按位置查，驱动灵动岛的音浪 */
+    private val levelHist = ArrayDeque<Pair<Long, Float>>()
+
+    fun levelAt(posMs: Long): Float = synchronized(levelHist) {
+        var best = 0f
+        for (i in levelHist.indices.reversed()) {
+            val (t, v) = levelHist[i]
+            if (t <= posMs) { best = v; break }
+        }
+        best
+    }
+
 
     /**
      * 当前的"鼓点冲击"强度：最近一个鼓点之后迅速衰减，0..1。
@@ -686,6 +698,15 @@ object MusicPlayer {
                 }
                 avgEnergy = if (avgEnergy == 0f) energy else avgEnergy + (energy - avgEnergy) * (frameMs / 1000f).coerceAtMost(1f)
                 decodedMs += frameMs
+                run {
+                    var sq = 0.0
+                    for (k in 0 until len) { val v = pcm[k] / 32768.0; sq += v * v }
+                    val rms = kotlin.math.sqrt(sq / maxOf(1, len)).toFloat()
+                    synchronized(levelHist) {
+                        levelHist.addLast(decodedMs.toLong() to rms)
+                        while (levelHist.size > 900) levelHist.removeFirst()
+                    }
+                }
                 // 音量均衡、环境音效（水下变闷、洞穴回声……）在鼓点检测之后加，不影响节奏判断
                 val gain = trackGain
                 if (gain != 1f) for (idx in 0 until len) pcm[idx] = softClip(pcm[idx] * gain)
