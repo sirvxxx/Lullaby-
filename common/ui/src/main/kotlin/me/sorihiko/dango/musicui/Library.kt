@@ -64,7 +64,7 @@ internal object Library {
             val value = statusState
             return if (value.expiresAt != 0L && System.nanoTime() - value.expiresAt >= 0L) "" else value.text
         }
-        private set(value) { statusState = Status(value) }
+        set(value) { statusState = Status(value) }
     @Volatile var recommend: List<NeteasePlaylist>? = null
 
     /** Home: lagu trending (acak). Charts: lagu chart (urut). */
