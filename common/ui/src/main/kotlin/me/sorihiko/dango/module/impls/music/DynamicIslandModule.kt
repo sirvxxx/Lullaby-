@@ -254,7 +254,9 @@ class DynamicIslandModule : Module() {
             val lh = platform.windowHeight / k
             val pill = pillPosition(lw, lh, top, 14f * sf / k)
             // saat layar expand terbuka, island asli disembunyikan; posisi terakhirnya disimpan supaya expand memuai dari sini
-            if (IslandState.open) return
+            // island asli disembunyikan hanya saat expand dimulai (bukan saat Alt ditekan)
+            if (IslandState.hideOriginal && System.currentTimeMillis() - IslandState.lastFrame > 500L) IslandState.hideOriginal = false
+            if (IslandState.hideOriginal) return
             IslandState.setPill(pill.x, pill.y, pill.width, pill.height, lw, lh)
             val r = min(h / 2f, 22f)
 

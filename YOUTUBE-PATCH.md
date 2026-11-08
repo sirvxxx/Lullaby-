@@ -106,3 +106,4 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Tombol island bisa diganti dari menu Controls (aksi "Island (interact / expand)", default Alt).
 - Perbaikan build: IslandPanel.drawCompact memakai ui.width (bukan width).
 - Expand island: sekarang memuai dari island asli (posisi disimpan lewat IslandState.setPill), island asli disembunyikan saat layar expand terbuka. Pill tiruan dihapus. Jam dipusatkan secara vertikal.
+- Island interaktif: tekan Alt -> kursor muncul, island asli tetap tampil. Klik island asli -> expand animasi dari posisinya (island asli disembunyikan saat expand dimulai). Klik di luar / Alt lagi -> tutup.

@@ -360,8 +360,11 @@ class MusicScreen(
                 islandClosing = true
             }
             islandT += ((if (islandExpanded) 1f else 0f) - islandT) * 0.2f
+            // island asli disembunyikan begitu expand dimulai, dan muncul lagi setelah panel benar-benar tertutup
+            IslandState.hideOriginal = islandExpanded || islandT > 0.001f
             if (islandClosing && islandT < 0.02f) {
                 IslandState.open = false
+                IslandState.hideOriginal = false
                 islandClosing = false
                 islandT = 0f
                 closed = true
@@ -371,8 +374,12 @@ class MusicScreen(
             ui.hits.clear()
             ctx.begin(false, ui.mx, ui.my)
             try {
-                island.draw(ui.lw, islandT) { islandExpanded = true }
-                // klik di luar panel yang terbuka: kembali ke pill (panel didaftarkan lebih dulu, jadi menang)
+                // belum expand: klik pada island asli (posisinya dari IslandState) untuk expand
+                if (!islandExpanded && !islandClosing) {
+                    IslandState.startRect(ui.lw, ui.lh)?.let { r -> ui.hits += r to { islandExpanded = true } }
+                }
+                island.draw(ui.lw, islandT)
+                // expand: klik di luar panel untuk menutup (panel didaftarkan lebih dulu, jadi menang)
                 if (islandExpanded) ui.hits += LayoutBounds(0f, 0f, ui.lw, ui.lh) to { islandExpanded = false }
             } finally {
                 ctx.end()

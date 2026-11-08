@@ -31,6 +31,8 @@ object IslandState {
         if (!known) null else LayoutBounds(nx * lw, ny * lh, nw * lw, nh * lh)
 
     @Volatile var open = false
+    /** true = island asli disembunyikan karena sedang expand (panel yang menggantikannya) */
+    @Volatile var hideOriginal = false
     /** Alt ditekan lagi / Esc / klik di luar: minta tutup */
     @Volatile var wantClose = false
     /** waktu terakhir layar island digambar (dipakai untuk tahu layarnya masih hidup) */
@@ -50,7 +52,8 @@ internal class IslandPanel(private val screen: MusicScreen) {
      * t = 0 (pill kecil di atas) .. 1 (panel penuh). Kaca melebar dari ukuran pill ke ukuran panel,
      * isi panel memudar masuk setelah kaca hampir terbuka, dan di-clip ke kaca supaya tidak keluar saat transisi.
      */
-    fun draw(lw: Float, t: Float, onPillClick: () -> Unit) {
+    fun draw(lw: Float, t: Float) {
+        if (t <= 0.001f) return   // belum expand: island asli yang tampil, panel tidak digambar
         val e = 1f - (1f - t.coerceIn(0f, 1f)).let { it * it * it }   // ease-out
         val full = LayoutBounds((lw - w) / 2f, 18f, w, h)
         // mulai dari posisi island asli, bukan pill tiruan
@@ -61,8 +64,6 @@ internal class IslandPanel(private val screen: MusicScreen) {
             lerp(pill.width, full.width, e), lerp(pill.height, full.height, e),
         )
         ui.ctx.drawShape(rect, ShapeStyle(Color(0.02f, 0.02f, 0.03f, 0.9f), lerp(pillH / 2f, 26f, e), 1f, Color(1f, 1f, 1f, 0.07f)))
-        // pill (belum expand): klik untuk expand
-        if (t < 0.35f) ui.hits += rect to onPillClick
         if (t < 0.6f) {
             ui.beginClip(rect)
             ui.ctx.pushOpacity(1f - t / 0.6f)
