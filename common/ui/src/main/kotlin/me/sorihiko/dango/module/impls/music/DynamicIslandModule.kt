@@ -13,7 +13,9 @@ import me.sorihiko.dango.module.Category
 import me.sorihiko.dango.module.Module
 import me.sorihiko.dango.module.ModuleMeta
 import me.sorihiko.dango.module.values.BooleanValue
+import me.sorihiko.dango.musicui.IslandRects
 import me.sorihiko.dango.musicui.IslandState
+import me.sorihiko.dango.musicui.Library
 import me.sorihiko.dango.module.values.FloatValue
 import me.sorihiko.dango.module.values.IntValue
 import me.sorihiko.dango.module.values.ModuleValue
@@ -253,48 +255,141 @@ class DynamicIslandModule : Module() {
             val top = 18f * sf / k                       // 和原来一样，留出 Boss 血条的位置
             val lh = platform.windowHeight / k
             val pill = pillPosition(lw, lh, top, 14f * sf / k)
-            // saat layar expand terbuka, island asli disembunyikan; posisi terakhirnya disimpan supaya expand memuai dari sini
-            // island asli disembunyikan hanya saat expand dimulai (bukan saat Alt ditekan)
-            if (IslandState.hideOriginal && System.currentTimeMillis() - IslandState.lastFrame > 500L) IslandState.hideOriginal = false
-            if (IslandState.hideOriginal) return
             IslandState.setPill(pill.x, pill.y, pill.width, pill.height, lw, lh)
+            // ukuran island yang sudah expand (di tengah atas), dan keadaan animasinya
+            val full = LayoutBounds((lw - 480f) / 2f, top, 480f, 160f)
+            IslandState.setExpanded(full.x, full.y, full.width, full.height, lw, lh)
+            val e = IslandState.expandT.coerceIn(0f, 1f)
+            val rect = LayoutBounds(
+                islandLerp(pill.x, full.x, e), islandLerp(pill.y, full.y, e),
+                islandLerp(pill.width, full.width, e), islandLerp(pill.height, full.height, e),
+            )
             val r = min(h / 2f, 22f)
 
             ctx.pushScale(k, k, 1f)
+            val bgRadius = islandLerp(r, 26f, e)
             if (glass.get()) {
-                ctx.drawGlass(pill, Theme.GLASS_WINDOW.copy(radius = r, shadow = ShadowStyle(Color(0f, 0f, 0f, 0.14f), 8f, Vec2(0f, -2f))))
+                ctx.drawGlass(rect, Theme.GLASS_WINDOW.copy(radius = bgRadius, shadow = ShadowStyle(Color(0f, 0f, 0f, 0.14f), 8f, Vec2(0f, -2f))))
             } else {
                 ctx.drawShape(
-                    pill,
+                    rect,
                     ShapeStyle(
-                        Color(0.02f, 0.02f, 0.03f, 0.9f), r, 1f, Color(1f, 1f, 1f, 0.07f),
+                        Color(0.02f, 0.02f, 0.03f, 0.9f), bgRadius, 1f, Color(1f, 1f, 1f, 0.07f),
                         ShadowStyle(Color(0f, 0f, 0f, 0.18f), 8f, Vec2(0f, -2f)),
                     )
                 )
             }
 
-            // 内容按目标尺寸排版，在当前胶囊里居中，超出部分裁掉
+            // isi: saat belum expand = isi island asli (memudar keluar); saat expand = isi expand (memudar masuk)
             val (cw, ch) = dims(shown)
             val cb = LayoutBounds(pill.x + (w - cw) / 2f, pill.y + (h - ch) / 2f, cw, ch)
-            val scX = (pill.x * k).toInt()
-            val scY = (platform.windowHeight - (pill.y + h) * k).toInt()
-            ctx.scissor(scX, scY, (w * k).toInt() + 1, (h * k).toInt() + 1)
-
+            ctx.scissor((rect.x * k).toInt(), (platform.windowHeight - (rect.y + rect.height) * k).toInt(), (rect.width * k).toInt() + 1, (rect.height * k).toInt() + 1)
             mt.clear()
-            mt.clip = pill
-            ctx.pushOpacity(contentAlpha)
-            when (shown) {
-                Kind.IDLE -> if (musicIdle()) drawMusicIdle(ctx, cb) else drawIdle(ctx, cb)
-                Kind.SONG -> if (vertical()) drawSongVertical(ctx, cb) else drawSong(ctx, cb)
-                Kind.UPDATE -> drawUpdate(ctx, cb)
+            mt.clip = rect
+            val compactAlpha = contentAlpha * (1f - e / 0.5f).coerceIn(0f, 1f)
+            if (compactAlpha > 0.01f) {
+                ctx.pushOpacity(compactAlpha)
+                when (shown) {
+                    Kind.IDLE -> if (musicIdle()) drawMusicIdle(ctx, cb) else drawIdle(ctx, cb)
+                    Kind.SONG -> if (vertical()) drawSongVertical(ctx, cb) else drawSong(ctx, cb)
+                    Kind.UPDATE -> drawUpdate(ctx, cb)
+                }
+                ctx.popOpacity()
             }
-            ctx.popOpacity()
+            val expandAlpha = ((e - 0.4f) / 0.6f).coerceIn(0f, 1f)
+            if (expandAlpha > 0.01f) {
+                ctx.pushOpacity(expandAlpha)
+                drawExpanded(ctx, full)
+                ctx.popOpacity()
+            }
             ctx.popTransform()
             mt.flush(k)
             ctx.noScissor()
         } finally {
             ctx.end()
         }
+    }
+
+    private fun islandLerp(a: Float, b: Float, t: Float) = a + (b - a) * t
+
+    /** Isi island saat expand: cover, judul + jam (satu garis), artis, progres, tombol, volume, lirik, search. */
+    private fun drawExpanded(ctx: GuiCanvas, b: LayoutBounds) {
+        val t = MusicPlayer.current ?: return
+        val r = IslandRects(b)
+        val playing = MusicPlayer.state == MusicPlayer.State.PLAYING
+        ctx.drawShape(LayoutBounds(b.x + b.width * 0.5f, b.y + 16f, 1f, b.height - 32f), ShapeStyle(Color(1f, 1f, 1f, 0.12f), 0.5f))
+
+        CoverCache.upload()
+        CoverCache.trackRounded(t, 0.2f)?.let { ctx.drawImage(r.cover, it) }
+
+        // jam dan judul di garis y yang sama
+        val clock = clockText()
+        val clockW = width(clock, 13f, Theme.FONT_SEMIBOLD)
+        val titleW = b.width * 0.5f - (r.titleX - b.x) - 16f - clockW - 10f
+        text(ctx, clock, b.x + b.width * 0.5f - 16f - clockW, r.titleY, 13f, Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
+        text(ctx, trim(t.name, titleW, 13f, Theme.FONT_SEMIBOLD), r.titleX, r.titleY, 13f, Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
+        text(ctx, trim(t.artists.joinToString(" / "), titleW, 11f), r.titleX, r.artistY, 11f, Theme.TEXT_SECONDARY)
+
+        // progres
+        ctx.drawShape(r.progress, ShapeStyle(Theme.TRACK, 1.5f))
+        val dur = MusicPlayer.durationMs
+        if (dur > 0) {
+            val f = (MusicPlayer.positionMs.toDouble() / dur).coerceIn(0.0, 1.0).toFloat()
+            ctx.drawShape(LayoutBounds(r.progress.x, r.progress.y, max(3f, r.progress.width * f), r.progress.height), ShapeStyle(Theme.TEXT_PRIMARY, 1.5f))
+        }
+
+        // tombol: prev, play/pause, next
+        for (btnRect in listOf(r.prev, r.play, r.next)) ctx.drawShape(btnRect, ShapeStyle(Theme.CARD, btnRect.width / 2f))
+        glyphCentered(ctx, "◀", r.prev, Theme.TEXT_SECONDARY)
+        if (playing) {
+            val pc = r.play
+            ctx.drawShape(LayoutBounds(pc.x + pc.width * 0.36f, pc.y + pc.height * 0.3f, pc.width * 0.12f, pc.height * 0.4f), ShapeStyle(Theme.TEXT_PRIMARY, 1f))
+            ctx.drawShape(LayoutBounds(pc.x + pc.width * 0.54f, pc.y + pc.height * 0.3f, pc.width * 0.12f, pc.height * 0.4f), ShapeStyle(Theme.TEXT_PRIMARY, 1f))
+        } else {
+            glyphCentered(ctx, "▶", r.play, Theme.TEXT_PRIMARY)
+        }
+        glyphCentered(ctx, "▶", r.next, Theme.TEXT_SECONDARY)
+
+        // volume
+        ctx.drawShape(r.volume, ShapeStyle(Theme.TRACK, 3f))
+        val vol = MusicPlayer.volume.coerceIn(0f, 1f)
+        ctx.drawShape(LayoutBounds(r.volume.x, r.volume.y, max(3f, r.volume.width * vol), r.volume.height), ShapeStyle(Theme.TEXT_PRIMARY, 3f))
+
+        // lirik (baris yang sedang dinyanyikan lebih besar)
+        val lyrics = Library.lyricsFor(t)
+        val lines = lyrics?.lines.orEmpty()
+        val lcx = r.lyrics.x + r.lyrics.width / 2f
+        val lmid = r.lyrics.y + r.lyrics.height / 2f
+        if (lines.isEmpty()) {
+            val msg = if (lyrics == null && !Library.lyricsReady(t)) "Loading lyrics..." else "No lyrics"
+            centeredText(ctx, msg, lcx, lmid - 6f, 11f, Theme.TEXT_TERTIARY)
+        } else {
+            val idx = max(0, lyrics!!.indexAt(MusicPlayer.positionMs))
+            for (k in -1..1) {
+                val j = idx + k
+                if (j < 0 || j >= lines.size) continue
+                val active = k == 0
+                val size = if (active) 14f else 11f
+                val font = if (active) Theme.FONT_SEMIBOLD else Theme.FONT_REGULAR
+                val color = if (active) Theme.TEXT_PRIMARY else Theme.TEXT_TERTIARY
+                centeredText(ctx, trim(lines[j].text, r.lyrics.width - 16f, size, font), lcx, lmid + k * 24f - 7f, size, color, font)
+            }
+        }
+
+        // search bar
+        ctx.drawShape(r.search, ShapeStyle(Theme.CARD, r.search.height / 2f))
+        text(ctx, I18n.text("Search songs..."), r.search.x + 14f, r.search.y + r.search.height / 2f - 6f, 11f, Theme.TEXT_TERTIARY)
+    }
+
+    private fun glyphCentered(ctx: GuiCanvas, s: String, b: LayoutBounds, color: Color) {
+        val cx = b.x + b.width / 2f
+        val cy = b.y + b.height / 2f
+        text(ctx, s, cx - width(s, 12f) / 2f, cy - 7f, 12f, color)
+    }
+
+    private fun centeredText(ctx: GuiCanvas, s: String, cx: Float, y: Float, size: Float, color: Color, font: String = Theme.FONT_REGULAR) {
+        if (s.isEmpty()) return
+        text(ctx, s, cx - width(s, size, font) / 2f, y, size, color, font)
     }
 
     private fun drawIdle(ctx: GuiCanvas, b: LayoutBounds) {
