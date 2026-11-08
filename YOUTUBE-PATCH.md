@@ -60,3 +60,4 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Cover Netease diminta ukuran 500x500 (param=500y500) di CoverCache.
 - Buffer audio: sudah ~0,25 detik di MusicPlayer, tidak diubah (panduan 16 KB akan memperburuk crackling).
 - Audio: clipping dikurangi. Hard clip diganti soft limiter (di atas 85% full scale dibulatkan). Normalisasi tanpa info peak tidak boleh menaikkan gain di atas 1.0.
+- Now Playing: slider volume dihapus (tombol 5 tetap). Dynamic Island mode samping: latar hitam solid seperti mockup. Immersive: sampul lagu jadi latar window, diredupkan di bawah kaca.

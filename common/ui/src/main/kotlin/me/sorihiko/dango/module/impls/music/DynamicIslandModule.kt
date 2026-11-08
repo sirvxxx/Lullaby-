@@ -267,7 +267,7 @@ class DynamicIslandModule : Module() {
             val r = min(h / 2f, 22f)
 
             ctx.pushScale(k, k, 1f)
-            if (glass.get()) {
+            if (glass.get() && !vertical()) {
                 ctx.drawGlass(pill, Theme.GLASS_WINDOW.copy(radius = r, shadow = ShadowStyle(Color(0f, 0f, 0f, 0.14f), 8f, Vec2(0f, -2f))))
             } else {
                 ctx.drawShape(

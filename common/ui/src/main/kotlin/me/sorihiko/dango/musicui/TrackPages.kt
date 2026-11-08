@@ -112,7 +112,7 @@ internal class NowPlayingPage(private val screen: MusicScreen) {
     }
 
     private fun drawQueue(area: LayoutBounds) {
-        val controlsH = 104f
+        val controlsH = 74f
         val list = LayoutBounds(area.x, area.y, area.width, area.height - controlsH - 8f)
         queueArea = list
         val q = MusicPlayer.queue
@@ -154,7 +154,6 @@ internal class NowPlayingPage(private val screen: MusicScreen) {
         playPause(cx(2), cy, 56f)
         circle(cx(3), cy, d, false, "▶") { MusicPlayer.next() }
         circle(cx(4), cy, d, MusicPlayer.shuffle, "⇄") { module.toggleShuffle() }
-        drawVolume(LayoutBounds(area.x + 18f, area.bottom - 22f, area.width - 36f, 16f))
     }
 
     private fun circle(cx: Float, cy: Float, d: Float, on: Boolean, glyph: String, action: () -> Unit) {
@@ -174,21 +173,6 @@ internal class NowPlayingPage(private val screen: MusicScreen) {
             ui.icon("▶", cx + 2f, cy, 18f, Theme.TEXT_PRIMARY)
         }
         ui.hits += b to { MusicPlayer.togglePause() }
-    }
-
-    /** Slider volume: klik untuk mengatur, sama dengan volume di dock pemutar */
-    private fun drawVolume(r: LayoutBounds) {
-        val track = LayoutBounds(r.x, r.y + 5f, r.width, 6f)
-        ui.card(track, Theme.CARD, 3f)
-        val v = MusicPlayer.volume.coerceIn(0f, 1f)
-        ui.card(LayoutBounds(track.x, track.y, max(6f, track.width * v), track.height), RED, 3f)
-        ui.card(LayoutBounds(track.x + track.width * v - 6f, track.y - 3f, 12f, 12f), Theme.TEXT_PRIMARY, 6f)
-        ui.hits += r.expand(0f, 8f) to { setVolume(((ui.mx - r.x) / r.width).coerceIn(0f, 1f)) }
-    }
-
-    private fun setVolume(v: Float) {
-        DangoMusic.instance.moduleManager.get(NeteaseMusicModule::class.java).setVolume(v)
-        MusicPlayer.volume = v
     }
 
     /** Kanan: cover di tengah, kotak judul, lalu panel lirik yang bisa di-scroll */

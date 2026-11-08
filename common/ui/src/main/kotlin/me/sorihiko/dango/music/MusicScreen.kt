@@ -453,6 +453,16 @@ class MusicScreen(
         val base = dragWin ?: savedWin()
         winRect = base
         val win = LayoutBounds(base.x, base.y + (1f - alpha) * 12f, base.width, base.height)
+        // Immersive: sampul lagu yang sedang diputar jadi latar window, diredupkan, lalu kaca di atasnya
+        MusicPlayer.current?.let { cur ->
+            CoverCache.track(cur)?.let { tex ->
+                ui.beginClip(win)
+                val side = maxOf(win.width, win.height) * 1.15f
+                ui.ctx.drawImage(LayoutBounds(win.x + (win.width - side) / 2f, win.y + (win.height - side) / 2f, side, side), tex)
+                ui.ctx.drawShape(win, ShapeStyle(Color(0.03f, 0.03f, 0.05f, 0.7f), Theme.GLASS_WINDOW.radius))
+                ui.endClip()
+            }
+        }
         ui.ctx.drawGlass(win, Theme.GLASS_WINDOW)
 
         val pad = 10f
