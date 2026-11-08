@@ -318,8 +318,6 @@ class MusicScreen(
 
     // ---------------------------------------------------------------- 绘制
 
-    /** 每帧调用 */
-    @JvmOverloads
     /** true = hanya panel island yang di-expand (dibuka dengan menahan Alt) */
     var islandOnly = false
     private val island = IslandPanel(this)
@@ -333,6 +331,8 @@ class MusicScreen(
         sidebar.searchFocused = true
     }
 
+    /** 每帧调用 */
+    @JvmOverloads
     fun render(menuBackdropReady: Boolean = false) {
         if (closed) return
         val alpha = opacity(System.currentTimeMillis())

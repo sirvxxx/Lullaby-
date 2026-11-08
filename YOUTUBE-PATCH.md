@@ -95,3 +95,4 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Belum dikerjakan: island interaktif (Alt untuk membebaskan kursor dan panel expand). Ini perlu hook input dan screen per versi.
 - Island interaktif (modern): tahan Alt saat ada lagu untuk membuka panel expand (cover, judul, progres, prev/play/next, volume, lirik, search bar). Lepas Alt untuk menutup. Klik search bar membuka GUI penuh dengan kotak search aktif. Legacy: Alt membuka GUI penuh.
 - Animasi island: kaca melebar dari pill ke panel (ease-out), isi memudar masuk setelah kaca hampir terbuka, di-clip ke kaca. Saat Alt dilepas panel menyusut kembali ke pill, lalu layar ditutup.
+- Perbaikan build: anotasi @JvmOverloads kembali ke fun render (sempat terbawa ke properti island).
