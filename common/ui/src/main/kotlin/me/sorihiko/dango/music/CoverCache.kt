@@ -160,8 +160,7 @@ object CoverCache {
         return null
     }
 
-    /** sudut cover dibulatkan di tekstur (drawCover tidak memotong sudut sendiri) */
-    fun track(t: NeteaseTrack) = trackRounded(t) ?: get("t:${t.key}", t.coverUrl)
+    fun track(t: NeteaseTrack) = get("t:${t.key}", t.coverUrl)
 
     private val accents = HashMap<String, Triple<Float, Float, Float>>()
 

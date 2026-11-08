@@ -145,13 +145,11 @@ internal class NowPlayingPage(private val screen: MusicScreen) {
 
     private fun drawPanel(area: LayoutBounds) {
         val cur = MusicPlayer.current
-        val side = min(area.width * 0.8f, area.height * 0.46f)
+        val side = min(area.width * 0.9f, area.height * 0.5f)
         val cover = LayoutBounds(area.x + (area.width - side) / 2f, area.y, side, side)
-        // halo aksen di belakang cover: kedalaman dan warna, tanpa menutupi gambar
-        ui.card(LayoutBounds(cover.x - 14f, cover.y - 14f, side + 28f, side + 28f), RED.copy(a = 0.06f), 26f)
-        ui.drawCover(cover, cur?.let { CoverCache.track(it) }, 14f)
+        ui.drawCover(cover, cur?.let { CoverCache.trackRounded(it) }, 18f)
 
-        val titleBox = LayoutBounds(area.x, cover.bottom + 12f, area.width, 52f)
+        val titleBox = LayoutBounds(area.x, cover.bottom + 14f, area.width, 54f)
         glassCard(titleBox, 14f)
         val cx = area.x + area.width / 2f
         if (cur != null) {
@@ -215,7 +213,6 @@ internal class NowPlayingPage(private val screen: MusicScreen) {
     /** kartu kaca: isi gelap transparan + kilau tipis di tepi atas */
     private fun glassCard(b: LayoutBounds, r: Float) {
         ui.card(b, Theme.CARD, r)
-        ui.card(LayoutBounds(b.x + r, b.y + 1f, b.width - 2f * r, 1f), Color(1f, 1f, 1f, 0.14f), 0.5f)
     }
 
     private fun centered(s: String, cx: Float, y: Float, size: Float, color: Color, font: String = Theme.FONT_REGULAR) {

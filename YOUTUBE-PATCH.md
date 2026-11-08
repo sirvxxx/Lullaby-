@@ -77,3 +77,6 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Warna aksen mengikuti warna dominan cover (CoverCache.accent), dipakai untuk RED dan tint window.
 - Sudut cover dibulatkan di semua tampilan (CoverCache.track memakai tekstur rounded).
 - Now Playing: cover lebih kecil, kartu lebih rapi. Dynamic Island samping: pill hitam solid.
+- Dibatalkan: warna aksen dari cover (percobaan 3) dan sudut cover membulat di Home/Charts (percobaan 5). Romaji tetap.
+- Dynamic Island samping: kembali abu-abu seperti top/bottom; yang berubah hanya visualizer (batang horizontal mengikuti audio).
+- Now Playing: halo dan garis highlight dihapus, cover membulat, kotak judul lebih rapi.
