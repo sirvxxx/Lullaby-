@@ -109,3 +109,7 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Island interaktif: tekan Alt -> kursor muncul, island asli tetap tampil. Klik island asli -> expand animasi dari posisinya (island asli disembunyikan saat expand dimulai). Klik di luar / Alt lagi -> tutup.
 - Island: pill tiruan dan panel terpisah dihapus. Island asli membesar sendiri saat diklik (animasi), isi expand memudar masuk. Jam dan judul satu garis y.
 - Perbaikan build: IslandPanel.kt dihapus (deklarasi IslandState ganda), MusicScreen meng-import DangoMusic.
+- Alt: ditahan = kursor muncul. Dilepas: kursor hilang kalau pill kecil; kalau pill sedang membesar, tetap sampai mengecil lagi.
+- Panel besar: tata letak dirapikan (tombol di tengah, progress tidak menabrak tombol).
+- Pill kecil: jam dan judul tepat di tengah pill.
+- Panel besar: tata letak dirapikan. Pill kecil: judul di tengah pill vertikal.

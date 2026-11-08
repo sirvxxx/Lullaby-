@@ -13,6 +13,8 @@ object IslandState {
     @Volatile var wantClose = false
     /** waktu terakhir layar island digambar */
     @Volatile var lastFrame = 0L
+    /** Alt sedang ditahan (dicek setiap tick) */
+    @Volatile var altHeld = false
     /** 0 = island asli, 1 = expand penuh */
     @Volatile var expandT = 0f
 

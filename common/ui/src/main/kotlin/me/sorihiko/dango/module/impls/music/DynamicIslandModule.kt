@@ -418,7 +418,7 @@ class DynamicIslandModule : Module() {
         val playing = MusicPlayer.state == MusicPlayer.State.PLAYING
         val tx = cover.right + 9f
         val title = trim(t.name, 170f, 12f, Theme.FONT_SEMIBOLD)
-        text(ctx, title, tx, b.y + 16f - 12f * 0.39f, 12f, if (playing) Theme.TEXT_PRIMARY else Theme.TEXT_SECONDARY, Theme.FONT_SEMIBOLD)
+        text(ctx, title, tx, b.y + b.height / 2f - 7f, 12f, if (playing) Theme.TEXT_PRIMARY else Theme.TEXT_SECONDARY, Theme.FONT_SEMIBOLD)
         bars(ctx, b.right - 12f - 14f, b.y + 22f, playing, 11f)
     }
 

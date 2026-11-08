@@ -359,17 +359,12 @@ class MusicScreen(
         if (!islandOnly) IslandState.open = false
         if (islandOnly) {
             IslandState.lastFrame = System.currentTimeMillis()
-            if (IslandState.wantClose) {
-                IslandState.wantClose = false
-                islandExpanded = false
-                islandClosing = true
-            }
-            // animasi: island asli membesar / mengecil dari posisinya sendiri (digambar modul Dynamic Island)
+            // animasi: membesar saat expand, mengecil saat pill ditutup
             islandT += ((if (islandExpanded) 1f else 0f) - islandT) * 0.2f
             IslandState.expandT = islandT
-            if (islandClosing && islandT < 0.02f) {
+            // tutup hanya kalau pill kecil dan Alt sudah dilepas (kursor ikut hilang)
+            if (!islandExpanded && islandT < 0.02f && !IslandState.altHeld) {
                 IslandState.open = false
-                islandClosing = false
                 islandT = 0f
                 IslandState.expandT = 0f
                 closed = true
@@ -381,8 +376,8 @@ class MusicScreen(
             try {
                 val pill = IslandState.startRect(ui.lw, ui.lh)
                 val expanded = IslandState.expandedRect(ui.lw, ui.lh)
-                if (!islandExpanded && !islandClosing && islandT < 0.02f && pill != null) {
-                    // belum expand: klik island asli untuk membesarkannya
+                if (!islandExpanded && islandT < 0.02f && pill != null) {
+                    // pill kecil: klik untuk membesarkan
                     ui.hits += pill to { islandExpanded = true }
                 }
                 if (expanded != null && (islandExpanded || islandT > 0.02f)) {
@@ -394,8 +389,8 @@ class MusicScreen(
                         islandSetVolume(((ui.mx - r.volume.x) / r.volume.width).coerceIn(0f, 1f))
                     }
                     ui.hits += r.search to { openSearchFromIsland() }
-                    // klik di luar island yang sudah expand: kembali ke island asli (paling akhir = paling rendah prioritasnya)
-                    ui.hits += LayoutBounds(0f, 0f, ui.lw, ui.lh) to { islandExpanded = false }
+                    // klik di luar panel yang terbuka: mengecilkan pill (paling akhir = prioritas terendah)
+                    if (islandExpanded) ui.hits += LayoutBounds(0f, 0f, ui.lw, ui.lh) to { islandExpanded = false }
                 }
             } finally {
                 ctx.end()

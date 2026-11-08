@@ -310,17 +310,14 @@ class NeteaseMusicModule : Module() {
         applyLanguage()
         MusicSources.selected = MusicSource.values()[musicSource.value]
         DangoMusic.instance.platform.syncKeyBindings(keyBindings)
-        // Alt (sekali tekan): buka island (kursor bebas). Tekan lagi saat sudah terbuka: tutup.
+        // Alt ditahan: kursor muncul dan island bisa diklik. Dilepas: kursor hilang kalau pill kecil,
+        // tetap ada kalau pill sedang membesar (ditutup dari layar island).
         val altDown = DangoMusic.instance.platform.isKeyDown(keyIsland.value)
-        if (altDown && !altWasDown) {
-            val live = me.sorihiko.dango.musicui.IslandState.open &&
-                System.currentTimeMillis() - me.sorihiko.dango.musicui.IslandState.lastFrame < 500L
-            if (live) me.sorihiko.dango.musicui.IslandState.wantClose = true
-            else if (MusicPlayer.current != null) {
-                me.sorihiko.dango.musicui.IslandState.open = true
-                me.sorihiko.dango.musicui.IslandState.lastFrame = System.currentTimeMillis()
-                DangoMusic.instance.platform.openIslandScreen()
-            }
+        me.sorihiko.dango.musicui.IslandState.altHeld = altDown
+        if (altDown && !me.sorihiko.dango.musicui.IslandState.open && MusicPlayer.current != null) {
+            me.sorihiko.dango.musicui.IslandState.open = true
+            me.sorihiko.dango.musicui.IslandState.lastFrame = System.currentTimeMillis()
+            DangoMusic.instance.platform.openIslandScreen()
         }
         altWasDown = altDown
         UpdateChecker.tick(checkUpdates.get())
