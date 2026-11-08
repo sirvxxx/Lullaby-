@@ -129,6 +129,16 @@ internal object Library {
         return true
     }
 
+    fun renameImported(id: Long, name: String) {
+        ImportedPlaylists.rename(id, name)
+        playlists = playlists.map { if (it.id == id) NeteasePlaylist(it.id, name.trim().ifEmpty { it.name }, it.trackCount, it.coverUrl, it.owned) else it }
+    }
+
+    fun deleteImported(id: Long) {
+        ImportedPlaylists.delete(id)
+        playlists = playlists.filterNot { it.id == id }
+    }
+
     @Synchronized private fun addImported(p: ImportedPlaylists.Imported) {
         playlists = playlists.filter { it.id != p.id } + p.asPlaylist()
     }
@@ -142,7 +152,7 @@ internal object Library {
             var error = ""
             val result = try { request.api.playlists() } catch (e: Exception) { error = publicError(e); emptyList() }
             publish(request) {
-                playlists = result + ImportedPlaylists.all().map { it.asPlaylist() }
+                playlists = (result + ImportedPlaylists.all().map { it.asPlaylist() }).distinctBy { it.id }
                 playlistsLoading = false
                 status = if (error.isNotEmpty()) error else if (request.api.libraryWarning.isNotEmpty()) request.api.libraryWarning
                     else if (request.api.source != MusicSource.NETEASE) ""

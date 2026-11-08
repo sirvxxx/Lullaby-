@@ -204,7 +204,29 @@ class MusicScreen(
         Library.loadTracks(p.id)
     }
 
+    /** Rename: kotak search dipakai sebagai input nama baru. Enter = simpan, Esc = batal. */
+    private var renameTarget: NeteasePlaylist? = null
+
+    internal fun beginRename(p: NeteasePlaylist) {
+        renameTarget = p
+        sidebar.searchText = p.name
+        sidebar.searchFocused = true
+    }
+
+    internal fun cancelRename() {
+        renameTarget = null
+        sidebar.searchText = ""
+    }
+
     internal fun doSearch() {
+        renameTarget?.let { target ->
+            val name = sidebar.searchText.trim()
+            renameTarget = null
+            sidebar.searchFocused = false
+            if (name.isNotEmpty()) Library.renameImported(target.id, name)
+            sidebar.searchText = ""
+            return
+        }
         val q = sidebar.searchText.trim()
         if (q.isEmpty()) return
         sidebar.searchFocused = false

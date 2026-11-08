@@ -387,8 +387,8 @@ class DynamicIslandModule : Module() {
         val step = (b.bottom - 14f - top) / n
         for (i in 0 until n) {
             val shape = 0.55f + 0.45f * kotlin.math.abs(sin(i * 1.3)).toFloat()
-            val target = (0.06f + level * 3.4f * shape).coerceIn(0.06f, 1f)
-            sideBars[i] += (target - sideBars[i]) * 0.35f        // halus, tidak loncat
+            val target = (0.06f + level * 3.8f * shape).coerceIn(0.06f, 1f)
+            sideBars[i] += (target - sideBars[i]) * 0.5f         // halus, tidak loncat
             val w = 6f + 36f * sideBars[i]
             ctx.drawShape(
                 LayoutBounds(cx - w / 2f, top + i * step, w, 2.4f),

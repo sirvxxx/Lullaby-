@@ -69,3 +69,7 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Sidebar: brand hanya "LULLABY+".
 - Dynamic Island: posisi (Top/Bottom/Left/Right) diganti klik-ganti, tanpa slider. Mode samping: capsule seperti mode atas diputar, cover bulat di atas, batang audio mengikuti level RMS lagu (MusicPlayer.levelAt).
 - Now Playing: kartu dengan kilau tepi, halo aksen di belakang cover, lirik berjalan pelan mengikuti baris aktif dengan glow lembut di baris yang sedang dinyanyikan.
+- Cover: bingkai hitam (letterbox) di tepi thumbnail dibuang sebelum dipotong persegi (berlaku juga untuk Dynamic Island).
+- Playlist impor: tombol Rename (lewat kotak search; Enter simpan, Esc batal) dan Delete di header playlist.
+- Grid Playlist: duplikat ID dibersihkan.
+- Dynamic Island: bar sedikit lebih sensitif.

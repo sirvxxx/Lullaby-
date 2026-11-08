@@ -5,6 +5,7 @@ import me.sorihiko.dango.i18n.I18n
 import me.sorihiko.dango.DangoClient
 import me.sorihiko.dango.music.CoverCache
 import me.sorihiko.dango.music.CloudDrives
+import me.sorihiko.dango.music.ImportedPlaylists
 import me.sorihiko.dango.music.MusicPlayer
 import me.sorihiko.dango.music.MusicScreen
 import me.sorihiko.dango.music.MusicSource
@@ -344,6 +345,21 @@ internal class TracksPage(private val screen: MusicScreen) {
             ui.icon("⇄", sb.x + 20f, sb.y + 15f, 12f, Theme.TEXT_PRIMARY)
             ui.text(shuffleLabel, sb.x + 32f, sb.y + 9f, 12f, Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
             ui.hits += sb to { MusicPlayer.playRandom(tracks, radio()) }
+
+            // ubah nama / hapus: hanya untuk playlist yang diimpor sendiri
+            val opened = ScreenState.opened
+            if (opened != null && ImportedPlaylists.get(opened.id) != null) {
+                val rnLabel = I18n.text("Rename")
+                val rb = LayoutBounds(sb.right + 10f, sb.y, ui.width(rnLabel, 12f, Theme.FONT_SEMIBOLD) + 36f, 30f)
+                ctx.drawShape(rb, ShapeStyle(if (ui.hover(rb)) Color(1f, 1f, 1f, 0.12f) else Color(1f, 1f, 1f, 0.07f), 15f, 1f, Color(1f, 1f, 1f, 0.09f)))
+                ui.text(rnLabel, rb.x + 18f, rb.y + 9f, 12f, Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
+                ui.hits += rb to { screen.beginRename(opened) }
+                val dlLabel = I18n.text("Delete")
+                val db = LayoutBounds(rb.right + 10f, rb.y, ui.width(dlLabel, 12f, Theme.FONT_SEMIBOLD) + 36f, 30f)
+                ctx.drawShape(db, ShapeStyle(RED.copy(a = if (ui.hover(db)) 0.38f else 0.22f), 15f))
+                ui.text(dlLabel, db.x + 18f, db.y + 9f, 12f, Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
+                ui.hits += db to { Library.deleteImported(opened.id); screen.go(Page.PLAYLISTS) }
+            }
             if (headerH < 100f) headerH = 92f
         }
 

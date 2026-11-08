@@ -55,6 +55,19 @@ object ImportedPlaylists {
 
     @Synchronized fun get(id: Long): Imported? { ensureLoaded(); return lists[id] }
 
+    @Synchronized fun rename(id: Long, name: String) {
+        ensureLoaded()
+        val p = lists[id] ?: return
+        lists[id] = Imported(id, name.trim().ifEmpty { p.name }, p.coverUrl, p.tracks, p.missing)
+        save()
+    }
+
+    @Synchronized fun delete(id: Long) {
+        ensureLoaded()
+        lists.remove(id)
+        save()
+    }
+
     @Synchronized fun put(p: Imported) {
         ensureLoaded()
         lists[p.id] = p

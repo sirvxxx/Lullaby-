@@ -446,7 +446,7 @@ internal class Sidebar(private val screen: MusicScreen) {
         }
         if (!searchFocused) return false
         when {
-            keyCode == Keys.ESCAPE -> searchFocused = false
+            keyCode == Keys.ESCAPE -> { searchFocused = false; screen.cancelRename() }
             keyCode == Keys.RETURN || keyCode == Keys.NUMPADENTER -> {
                 searchPress.v -= 6f
                 screen.doSearch()

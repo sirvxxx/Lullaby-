@@ -213,10 +213,42 @@ object CoverCache {
     fun playlist(p: NeteasePlaylist) = get("p:${p.id}", p.coverUrl)
     fun playlistRounded(p: NeteasePlaylist, ratio: Float = ROUND) = rounded("p:${p.id}", p.coverUrl, ratio)
 
+    /**
+     * Kotak isi gambar: buang bingkai hitam (letterbox) di tepi dulu, baru ambil persegi di tengah.
+     * Thumbnail YouTube 16:9 punya bar hitam atas-bawah; tanpa ini bar itu ikut terlihat di cover.
+     * Hasilnya: [x, y, w, h] area isi.
+     */
+    private fun contentBox(src: BufferedImage): IntArray {
+        fun lum(x: Int, y: Int): Int {
+            val p = src.getRGB(x, y)
+            return ((p shr 16) and 255) + ((p shr 8) and 255) + (p and 255)
+        }
+        fun rowDark(y: Int): Boolean {
+            for (i in 0 until 24) if (lum(src.width * i / 24, y) > 60) return false
+            return true
+        }
+        fun colDark(x: Int): Boolean {
+            for (i in 0 until 24) if (lum(x, src.height * i / 24) > 60) return false
+            return true
+        }
+        var top = 0
+        var bottom = src.height - 1
+        var left = 0
+        var right = src.width - 1
+        val maxY = src.height * 2 / 5
+        val maxX = src.width * 2 / 5
+        while (top < maxY && rowDark(top)) top++
+        while (bottom > src.height - 1 - maxY && rowDark(bottom)) bottom--
+        while (left < maxX && colDark(left)) left++
+        while (right > src.width - 1 - maxX && colDark(right)) right--
+        return intArrayOf(left, top, right - left + 1, bottom - top + 1)
+    }
+
     private fun square(src: BufferedImage, size: Int): BufferedImage {
-        val side = min(src.width, src.height)
-        val x = (src.width - side) / 2
-        val y = (src.height - side) / 2
+        val box = contentBox(src)
+        val side = min(box[2], box[3])
+        val x = box[0] + (box[2] - side) / 2
+        val y = box[1] + (box[3] - side) / 2
         val out = BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB)
         val g = out.createGraphics()
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC)
