@@ -120,3 +120,6 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Pill kecil: isi digeser 3px ke kanan supaya pas di tengah.
 - Optimasi: jam dihitung sekali per detik (bukan tiap frame), lebar jam di-cache, tidak ada alokasi list per frame di panel expand, variabel tak terpakai (islandT, islandClosing, altWasDown) dihapus.
 - Pill kecil: hanya jam yang digeser 3px ke kanan (cover, judul, bars tetap).
+- Pill kecil: jam digeser lagi 3px ke kanan.
+- Panel besar: judul lebih dekat ke artis, progress dan tombol dinaikkan dari tepi bawah.
+- Lirik panel besar: gulir halus per baris (baris aktif besar dan terang, baris lain memudar).

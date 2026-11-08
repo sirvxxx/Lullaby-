@@ -372,24 +372,28 @@ class DynamicIslandModule : Module() {
         val vol = MusicPlayer.volume.coerceIn(0f, 1f)
         ctx.drawShape(LayoutBounds(r.volume.x, r.volume.y, max(3f, r.volume.width * vol), r.volume.height), ShapeStyle(Theme.TEXT_PRIMARY, 3f))
 
-        // lirik (baris yang sedang dinyanyikan lebih besar)
+        // lirik: gulir halus ke baris yang sedang dinyanyikan. Baris aktif paling besar dan paling terang.
         val lyrics = Library.lyricsFor(t)
         val lines = lyrics?.lines.orEmpty()
         val lcx = r.lyrics.x + r.lyrics.width / 2f
         val lmid = r.lyrics.y + r.lyrics.height / 2f
         if (lines.isEmpty()) {
             val msg = if (lyrics == null && !Library.lyricsReady(t)) "Loading lyrics..." else "No lyrics"
+            lyricPos = 0f
             centeredText(ctx, msg, lcx, lmid - 0.39f * 11f, 11f, Theme.TEXT_TERTIARY)
         } else {
-            val idx = max(0, lyrics!!.indexAt(MusicPlayer.positionMs))
-            for (k in -1..1) {
-                val j = idx + k
+            val target = max(0, lyrics!!.indexAt(MusicPlayer.positionMs)).toFloat()
+            // lompat langsung kalau jauh (lagu baru / seek), kalau dekat digulir halus
+            lyricPos = if (kotlin.math.abs(target - lyricPos) > 3f) target else lyricPos + (target - lyricPos) * 0.22f
+            val base = kotlin.math.floor(lyricPos).toInt()
+            for (j in base - 2..base + 2) {
                 if (j < 0 || j >= lines.size) continue
-                val active = k == 0
-                val size = if (active) 14f else 11f
-                val font = if (active) Theme.FONT_SEMIBOLD else Theme.FONT_REGULAR
-                val color = if (active) Theme.TEXT_PRIMARY else Theme.TEXT_TERTIARY
-                centeredText(ctx, trim(lines[j].text, r.lyrics.width - 16f, size, font), lcx, lmid + k * 24f - 0.39f * size, size, color, font)
+                val dist = kotlin.math.abs(j - lyricPos).coerceAtMost(1f)
+                val size = 12f + 2f * (1f - dist)
+                val font = if (dist < 0.5f) Theme.FONT_SEMIBOLD else Theme.FONT_REGULAR
+                val col = Color(Theme.TEXT_PRIMARY.r, Theme.TEXT_PRIMARY.g, Theme.TEXT_PRIMARY.b, 1f - dist * 0.65f)
+                val y = lmid + (j - lyricPos) * 24f - 0.39f * size
+                centeredText(ctx, trim(lines[j].text, r.lyrics.width - 16f, size, font), lcx, y, size, col, font)
             }
         }
 
@@ -429,7 +433,7 @@ class DynamicIslandModule : Module() {
         val t = MusicPlayer.current ?: return
         // 胶囊两头是半圆：封面往里挪一点、圆角跟着胶囊的弧度走，看起来才居中
         val cw = clockW()
-        if (cw > 0f) text(ctx, clockText(), b.x + 13f, b.y + b.height / 2f - 0.39f * 12f, 12f, Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
+        if (cw > 0f) text(ctx, clockText(), b.x + 16f, b.y + b.height / 2f - 0.39f * 12f, 12f, Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
         val cover = LayoutBounds(b.x + 9f + cw, b.y + 5f, 22f, 22f)
         drawCover(ctx, cover, t.let { CoverCache.trackRounded(it, 0.36f) ?: CoverCache.track(it) })
         val playing = MusicPlayer.state == MusicPlayer.State.PLAYING
@@ -480,6 +484,8 @@ class DynamicIslandModule : Module() {
     private val showClock = BooleanValue(true)
 
     /** Jam sekarang (HH:mm), dihitung ulang setiap frame */
+    /** posisi gulir lirik (fraksi baris), dihaluskan tiap frame */
+    private var lyricPos = 0f
     /** jam dihitung sekali per detik, dan lebarnya ikut disimpan (bukan tiap frame) */
     private var clockSec = -1L
     private var clockStr = ""
