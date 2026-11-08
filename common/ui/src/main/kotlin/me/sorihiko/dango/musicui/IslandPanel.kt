@@ -7,12 +7,29 @@ import me.sorihiko.dango.music.CoverCache
 import me.sorihiko.dango.music.MusicPlayer
 import me.sorihiko.dango.music.MusicScreen
 import me.sorihiko.dango.ui.LayoutBounds
+import me.sorihiko.dango.ui.ShapeStyle
 import me.sorihiko.dango.ui.Theme
 import me.sorihiko.dango.utils.Color
 import kotlin.math.max
 
 /** Status island yang sedang di-expand (dibuka dengan menahan Alt) */
 object IslandState {
+    /** posisi island asli dalam proporsi layar (0..1), supaya tidak tergantung skala GUI */
+    @Volatile private var nx = 0f
+    @Volatile private var ny = 0f
+    @Volatile private var nw = 0f
+    @Volatile private var nh = 0f
+    @Volatile private var known = false
+
+    fun setPill(x: Float, y: Float, w: Float, h: Float, lw: Float, lh: Float) {
+        if (lw <= 0f || lh <= 0f) return
+        nx = x / lw; ny = y / lh; nw = w / lw; nh = h / lh; known = true
+    }
+
+    /** posisi island asli dalam koordinat layar expand (null kalau belum pernah digambar) */
+    fun startRect(lw: Float, lh: Float): LayoutBounds? =
+        if (!known) null else LayoutBounds(nx * lw, ny * lh, nw * lw, nh * lh)
+
     @Volatile var open = false
     /** Alt ditekan lagi / Esc / klik di luar: minta tutup */
     @Volatile var wantClose = false
@@ -36,14 +53,14 @@ internal class IslandPanel(private val screen: MusicScreen) {
     fun draw(lw: Float, t: Float, onPillClick: () -> Unit) {
         val e = 1f - (1f - t.coerceIn(0f, 1f)).let { it * it * it }   // ease-out
         val full = LayoutBounds((lw - w) / 2f, 18f, w, h)
-        val pillW = 270f
-        val pillH = 76f
-        val pill = LayoutBounds((lw - pillW) / 2f, 18f, pillW, pillH)
+        // mulai dari posisi island asli, bukan pill tiruan
+        val pill = IslandState.startRect(lw, ui.lh) ?: LayoutBounds((lw - 270f) / 2f, 18f, 270f, 76f)
+        val pillH = pill.height
         val rect = LayoutBounds(
             lerp(pill.x, full.x, e), lerp(pill.y, full.y, e),
             lerp(pill.width, full.width, e), lerp(pill.height, full.height, e),
         )
-        ui.ctx.drawGlass(rect, Theme.GLASS_WINDOW.copy(radius = lerp(pillH / 2f, 26f, e)))
+        ui.ctx.drawShape(rect, ShapeStyle(Color(0.02f, 0.02f, 0.03f, 0.9f), lerp(pillH / 2f, 26f, e), 1f, Color(1f, 1f, 1f, 0.07f)))
         // pill (belum expand): klik untuk expand
         if (t < 0.35f) ui.hits += rect to onPillClick
         if (t < 0.6f) {
@@ -74,7 +91,7 @@ internal class IslandPanel(private val screen: MusicScreen) {
         val playing = MusicPlayer.state == MusicPlayer.State.PLAYING
         val clock = java.time.LocalTime.now().let { "%02d:%02d".format(it.hour, it.minute) }
         val cw = ui.width(clock, 12f, Theme.FONT_SEMIBOLD) + 12f
-        ui.text(clock, p.x + 14f, p.y + (p.height - 14f) / 2f, 12f, Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
+        ui.text(clock, p.x + 14f, p.y + p.height / 2f - 7f, 12f, Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
         val cover = LayoutBounds(p.x + 14f + cw, p.y + 10f, 56f, 56f)
         ui.drawCover(cover, CoverCache.trackRounded(t, 0.5f), 28f)
         val tx = cover.right + 12f

@@ -105,3 +105,4 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Alt: sekali tekan untuk mengaktifkan island (kursor bebas), klik pill untuk expand, Alt lagi / Esc / klik di luar untuk menutup. Tidak perlu ditahan. Perbaikan: kode Alt sebelumnya salah (342 dipakai sebagai kode internal).
 - Tombol island bisa diganti dari menu Controls (aksi "Island (interact / expand)", default Alt).
 - Perbaikan build: IslandPanel.drawCompact memakai ui.width (bukan width).
+- Expand island: sekarang memuai dari island asli (posisi disimpan lewat IslandState.setPill), island asli disembunyikan saat layar expand terbuka. Pill tiruan dihapus. Jam dipusatkan secara vertikal.

@@ -13,6 +13,7 @@ import me.sorihiko.dango.module.Category
 import me.sorihiko.dango.module.Module
 import me.sorihiko.dango.module.ModuleMeta
 import me.sorihiko.dango.module.values.BooleanValue
+import me.sorihiko.dango.musicui.IslandState
 import me.sorihiko.dango.module.values.FloatValue
 import me.sorihiko.dango.module.values.IntValue
 import me.sorihiko.dango.module.values.ModuleValue
@@ -252,6 +253,9 @@ class DynamicIslandModule : Module() {
             val top = 18f * sf / k                       // 和原来一样，留出 Boss 血条的位置
             val lh = platform.windowHeight / k
             val pill = pillPosition(lw, lh, top, 14f * sf / k)
+            // saat layar expand terbuka, island asli disembunyikan; posisi terakhirnya disimpan supaya expand memuai dari sini
+            if (IslandState.open) return
+            IslandState.setPill(pill.x, pill.y, pill.width, pill.height, lw, lh)
             val r = min(h / 2f, 22f)
 
             ctx.pushScale(k, k, 1f)
@@ -311,7 +315,7 @@ class DynamicIslandModule : Module() {
         val t = MusicPlayer.current ?: return
         // 胶囊两头是半圆：封面往里挪一点、圆角跟着胶囊的弧度走，看起来才居中
         val cw = clockW()
-        if (cw > 0f) text(ctx, clockText(), b.x + 10f, b.y + (b.height - 14f) / 2f, 12f, Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
+        if (cw > 0f) text(ctx, clockText(), b.x + 10f, b.y + b.height / 2f - 7f, 12f, Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
         val cover = LayoutBounds(b.x + 9f + cw, b.y + 5f, 22f, 22f)
         drawCover(ctx, cover, t.let { CoverCache.trackRounded(it, 0.36f) ?: CoverCache.track(it) })
         val playing = MusicPlayer.state == MusicPlayer.State.PLAYING
