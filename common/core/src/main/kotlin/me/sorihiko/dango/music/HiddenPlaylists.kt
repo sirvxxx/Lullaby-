@@ -2,6 +2,7 @@ package me.sorihiko.dango.music
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonParser
+import com.google.gson.JsonPrimitive
 import me.sorihiko.dango.DangoLogger
 import me.sorihiko.dango.DangoMusic
 
@@ -33,7 +34,7 @@ object HiddenPlaylists {
         if (!ids.remove(id)) ids += id
         try {
             val arr = JsonArray()
-            ids.forEach { arr.add(it) }
+            ids.forEach { arr.add(JsonPrimitive(it)) }
             file().parentFile?.mkdirs()
             file().writeText(arr.toString(), Charsets.UTF_8)
         } catch (e: Exception) {

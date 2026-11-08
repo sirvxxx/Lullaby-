@@ -87,3 +87,4 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Clear queue: tombol Clear queue di halaman Queue.
 - Login lewat aplikasi: tombol Login YouTube / Login Spotify di halaman Playlist. Klik, tempel cookie di kotak search, tekan Enter. Tidak perlu file manual.
 - Login Spotify: cookie sp_dc dipakai untuk token Web API atas nama akun (dicoba pertama saat impor).
+- Perbaikan build: HiddenPlaylists menulis id lewat JsonPrimitive (Gson versi ini tidak punya add(Long)).
