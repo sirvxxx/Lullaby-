@@ -172,7 +172,7 @@ class DynamicIslandModule : Module() {
                 width(t.name, 14f, Theme.FONT_SEMIBOLD).coerceAtMost(260f),
                 width(t.artists.joinToString(" / "), 11f).coerceAtMost(260f),
             )
-            (clockW() + 76f + max(tw, 150f) + 44f) to 76f
+            (76f + max(tw, 150f) + 44f) to 76f
         }
         Kind.UPDATE -> {
             val tw = max(width(updateTitle(), 13f, Theme.FONT_SEMIBOLD), width(I18n.text("Copy the download link in the player's settings"), 11f))
@@ -180,7 +180,7 @@ class DynamicIslandModule : Module() {
         }
         Kind.IDLE -> if (musicIdle()) {
             val t = MusicPlayer.current!!
-            (9f + 22f + 9f + width(t.name, 12f, Theme.FONT_SEMIBOLD).coerceAtMost(170f) + 12f + 14f + 12f) to 32f
+            (clockW() + 9f + 22f + 9f + width(t.name, 12f, Theme.FONT_SEMIBOLD).coerceAtMost(170f) + 12f + 14f + 12f) to 32f
         } else {
             (14f + 6f + 8f + idleWidth() + 16f) to 32f
         }
@@ -310,7 +310,9 @@ class DynamicIslandModule : Module() {
     private fun drawMusicIdle(ctx: GuiCanvas, b: LayoutBounds) {
         val t = MusicPlayer.current ?: return
         // 胶囊两头是半圆：封面往里挪一点、圆角跟着胶囊的弧度走，看起来才居中
-        val cover = LayoutBounds(b.x + 9f, b.y + 5f, 22f, 22f)
+        val cw = clockW()
+        if (cw > 0f) text(ctx, clockText(), b.x + 10f, b.y + (b.height - 14f) / 2f, 12f, Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
+        val cover = LayoutBounds(b.x + 9f + cw, b.y + 5f, 22f, 22f)
         drawCover(ctx, cover, t.let { CoverCache.trackRounded(it, 0.36f) ?: CoverCache.track(it) })
         val playing = MusicPlayer.state == MusicPlayer.State.PLAYING
         val tx = cover.right + 9f
@@ -331,9 +333,7 @@ class DynamicIslandModule : Module() {
 
     private fun drawSong(ctx: GuiCanvas, b: LayoutBounds) {
         val t = MusicPlayer.current ?: return
-        val clockW = clockW()
-        if (clockW > 0f) text(ctx, clockText(), b.x + 12f, b.y + (b.height - 16f) / 2f, 14f, Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
-        val cover = LayoutBounds(b.x + 10f + clockW, b.y + 10f, 56f, 56f)
+        val cover = LayoutBounds(b.x + 10f, b.y + 10f, 56f, 56f)
         drawCover(ctx, cover, CoverCache.trackRounded(t) ?: CoverCache.track(t))
         val playing = MusicPlayer.state == MusicPlayer.State.PLAYING
         val tx = cover.right + 10f

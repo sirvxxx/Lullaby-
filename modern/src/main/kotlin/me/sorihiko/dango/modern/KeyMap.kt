@@ -15,6 +15,7 @@ object KeyMap {
 
     init {
         map(1, GlfwKeys.GLFW_KEY_ESCAPE)
+        map(56, 342)   // LWJGL2 LMENU -> GLFW_KEY_LEFT_ALT
         // 数字键 1-9, 0
         for (i in 0..8) map(2 + i, GlfwKeys.GLFW_KEY_1 + i)
         map(11, GlfwKeys.GLFW_KEY_0)

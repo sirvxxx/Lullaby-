@@ -323,6 +323,8 @@ class MusicScreen(
     private val island = IslandPanel(this)
     /** posisi animasi island: 0 = pill, 1 = panel penuh */
     private var islandT = 0f
+    private var islandExpanded = false
+    private var islandClosing = false
 
     /** Dari panel island: buka GUI penuh dengan kotak search aktif */
     internal fun openSearchFromIsland() {
@@ -351,11 +353,16 @@ class MusicScreen(
         val ctx = ui.ctx
         if (!islandOnly) IslandState.open = false
         if (islandOnly) {
-            // animasi: naik saat Alt ditahan, turun saat dilepas; tutup setelah kembali ke pill
-            val held = platform.isKeyDown(Keys.LEFT_ALT)
-            islandT += ((if (held) 1f else 0f) - islandT) * 0.2f
-            if (!held && islandT < 0.02f) {
+            IslandState.lastFrame = System.currentTimeMillis()
+            if (IslandState.wantClose) {
+                IslandState.wantClose = false
+                islandExpanded = false
+                islandClosing = true
+            }
+            islandT += ((if (islandExpanded) 1f else 0f) - islandT) * 0.2f
+            if (islandClosing && islandT < 0.02f) {
                 IslandState.open = false
+                islandClosing = false
                 islandT = 0f
                 closed = true
                 closeScreen()
@@ -364,7 +371,9 @@ class MusicScreen(
             ui.hits.clear()
             ctx.begin(false, ui.mx, ui.my)
             try {
-                island.draw(ui.lw, islandT)
+                island.draw(ui.lw, islandT) { islandExpanded = true }
+                // klik di luar panel yang terbuka: kembali ke pill (panel didaftarkan lebih dulu, jadi menang)
+                if (islandExpanded) ui.hits += LayoutBounds(0f, 0f, ui.lw, ui.lh) to { islandExpanded = false }
             } finally {
                 ctx.end()
             }

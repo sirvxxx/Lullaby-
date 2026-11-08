@@ -97,3 +97,10 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Animasi island: kaca melebar dari pill ke panel (ease-out), isi memudar masuk setelah kaca hampir terbuka, di-clip ke kaca. Saat Alt dilepas panel menyusut kembali ke pill, lalu layar ditutup.
 - Perbaikan build: anotasi @JvmOverloads kembali ke fun render (sempat terbawa ke properti island).
 - Perbaikan build: IslandState dibuat publik supaya modul modern bisa mengaksesnya.
+- Jam realtime pindah ke tampilan island biasa (saat lagu diputar), tidak lagi di notifikasi ganti lagu.
+- Alt: sekali tekan untuk mengaktifkan island (kursor bebas), klik pill untuk expand, Alt lagi / Esc / klik di luar untuk menutup. Tidak perlu ditahan. Perbaikan: kode Alt sebelumnya salah (342 dipakai sebagai kode internal).
+- Jam realtime pindah ke tampilan island biasa (saat lagu diputar), tidak lagi di notifikasi ganti lagu.
+- Alt: sekali tekan untuk mengaktifkan island (kursor bebas), klik pill untuk expand, Alt lagi / Esc / klik di luar untuk menutup. Tidak perlu ditahan. Perbaikan: kode Alt sebelumnya salah (342 dipakai sebagai kode internal).
+- Jam realtime pindah ke tampilan island biasa (saat lagu diputar), tidak lagi di notifikasi ganti lagu.
+- Alt: sekali tekan untuk mengaktifkan island (kursor bebas), klik pill untuk expand, Alt lagi / Esc / klik di luar untuk menutup. Tidak perlu ditahan. Perbaikan: kode Alt sebelumnya salah (342 dipakai sebagai kode internal).
+- Tombol island bisa diganti dari menu Controls (aksi "Island (interact / expand)", default Alt).

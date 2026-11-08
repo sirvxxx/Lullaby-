@@ -115,12 +115,15 @@ class NeteaseMusicModule : Module() {
 
     @ModuleValue("Toggle lyrics", "Hotkey to turn lyrics on or off")
     private val keyLyrics = IntValue(-100, 255, 0)
+    /** tombol untuk mengaktifkan / menutup island (bisa diganti di menu Controls) */
+    private val keyIsland = IntValue(-100, 255, Keys.LEFT_ALT)
 
     @ModuleValue("Volume normalization", "Keep songs at a similar loudness")
     private val normalize = BooleanValue(true)
 
     @ModuleValue("Fast glass", "Potato mode: no blur on the music screen, flat glass, less GPU work")
     private val fastGlass = BooleanValue(false)
+    private var altWasDown = false
 
     @ModuleValue("Blur resolution", "Lower = cheaper glass blur, a little blurrier (1x, 0.5x, 0.25x)")
     private val blurRes = IntValue(0, 2, 0)
@@ -145,7 +148,7 @@ class NeteaseMusicModule : Module() {
             PlayerKeyBinding(PlayerAction.OPEN, openKey), PlayerKeyBinding(PlayerAction.PAUSE, keyPause),
             PlayerKeyBinding(PlayerAction.PREVIOUS, keyPrev), PlayerKeyBinding(PlayerAction.NEXT, keyNext),
             PlayerKeyBinding(PlayerAction.VOLUME_UP, keyVolUp), PlayerKeyBinding(PlayerAction.VOLUME_DOWN, keyVolDown),
-            PlayerKeyBinding(PlayerAction.LYRICS, keyLyrics),
+            PlayerKeyBinding(PlayerAction.LYRICS, keyLyrics), PlayerKeyBinding(PlayerAction.ISLAND, keyIsland),
         )
     }
 
@@ -307,11 +310,19 @@ class NeteaseMusicModule : Module() {
         applyLanguage()
         MusicSources.selected = MusicSource.values()[musicSource.value]
         DangoMusic.instance.platform.syncKeyBindings(keyBindings)
-        // tahan Alt (saat ada lagu) untuk membuka panel island yang di-expand
-        if (!me.sorihiko.dango.musicui.IslandState.open && MusicPlayer.current != null && DangoMusic.instance.platform.isKeyDown(Keys.LEFT_ALT)) {
-            me.sorihiko.dango.musicui.IslandState.open = true
-            DangoMusic.instance.platform.openIslandScreen()
+        // Alt (sekali tekan): buka island (kursor bebas). Tekan lagi saat sudah terbuka: tutup.
+        val altDown = DangoMusic.instance.platform.isKeyDown(keyIsland.value)
+        if (altDown && !altWasDown) {
+            val live = me.sorihiko.dango.musicui.IslandState.open &&
+                System.currentTimeMillis() - me.sorihiko.dango.musicui.IslandState.lastFrame < 500L
+            if (live) me.sorihiko.dango.musicui.IslandState.wantClose = true
+            else if (MusicPlayer.current != null) {
+                me.sorihiko.dango.musicui.IslandState.open = true
+                me.sorihiko.dango.musicui.IslandState.lastFrame = System.currentTimeMillis()
+                DangoMusic.instance.platform.openIslandScreen()
+            }
         }
+        altWasDown = altDown
         UpdateChecker.tick(checkUpdates.get())
         // 快速玻璃（Potato）：全局开关，界面每帧读取；放在 enabled 检查之前，播放器关着也生效
         me.sorihiko.dango.Performance.lowEnd = fastGlass.get()

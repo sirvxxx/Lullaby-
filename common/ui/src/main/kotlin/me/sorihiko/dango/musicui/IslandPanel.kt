@@ -14,6 +14,10 @@ import kotlin.math.max
 /** Status island yang sedang di-expand (dibuka dengan menahan Alt) */
 object IslandState {
     @Volatile var open = false
+    /** Alt ditekan lagi / Esc / klik di luar: minta tutup */
+    @Volatile var wantClose = false
+    /** waktu terakhir layar island digambar (dipakai untuk tahu layarnya masih hidup) */
+    @Volatile var lastFrame = 0L
 }
 
 /**
@@ -29,7 +33,7 @@ internal class IslandPanel(private val screen: MusicScreen) {
      * t = 0 (pill kecil di atas) .. 1 (panel penuh). Kaca melebar dari ukuran pill ke ukuran panel,
      * isi panel memudar masuk setelah kaca hampir terbuka, dan di-clip ke kaca supaya tidak keluar saat transisi.
      */
-    fun draw(lw: Float, t: Float) {
+    fun draw(lw: Float, t: Float, onPillClick: () -> Unit) {
         val e = 1f - (1f - t.coerceIn(0f, 1f)).let { it * it * it }   // ease-out
         val full = LayoutBounds((lw - w) / 2f, 18f, w, h)
         val pillW = 270f
@@ -40,6 +44,15 @@ internal class IslandPanel(private val screen: MusicScreen) {
             lerp(pill.width, full.width, e), lerp(pill.height, full.height, e),
         )
         ui.ctx.drawGlass(rect, Theme.GLASS_WINDOW.copy(radius = lerp(pillH / 2f, 26f, e)))
+        // pill (belum expand): klik untuk expand
+        if (t < 0.35f) ui.hits += rect to onPillClick
+        if (t < 0.6f) {
+            ui.beginClip(rect)
+            ui.ctx.pushOpacity(1f - t / 0.6f)
+            drawCompact(pill)
+            ui.ctx.popOpacity()
+            ui.endClip()
+        }
 
         val alpha = ((t - 0.35f) / 0.65f).coerceIn(0f, 1f)
         if (alpha <= 0f) return
@@ -54,6 +67,27 @@ internal class IslandPanel(private val screen: MusicScreen) {
     }
 
     private fun lerp(a: Float, b: Float, t: Float) = a + (b - a) * t
+
+    /** Tampilan pill saat belum expand: jam di kiri, cover, judul, dan batang audio */
+    private fun drawCompact(p: LayoutBounds) {
+        val t = MusicPlayer.current ?: return
+        val playing = MusicPlayer.state == MusicPlayer.State.PLAYING
+        val clock = java.time.LocalTime.now().let { "%02d:%02d".format(it.hour, it.minute) }
+        val cw = width(clock, 12f, Theme.FONT_SEMIBOLD) + 12f
+        ui.text(clock, p.x + 14f, p.y + (p.height - 14f) / 2f, 12f, Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
+        val cover = LayoutBounds(p.x + 14f + cw, p.y + 10f, 56f, 56f)
+        ui.drawCover(cover, CoverCache.trackRounded(t, 0.5f), 28f)
+        val tx = cover.right + 12f
+        val tw = p.right - 60f - tx
+        ui.text(ui.trim(t.name, tw, 13f, Theme.FONT_SEMIBOLD), tx, p.y + 26f, 13f,
+            if (playing) Theme.TEXT_PRIMARY else Theme.TEXT_SECONDARY, Theme.FONT_SEMIBOLD)
+        ui.text(ui.trim(t.artists.firstOrNull().orEmpty(), tw, 10f), tx, p.y + 44f, 10f, Theme.TEXT_TERTIARY)
+        val barsX = p.right - 34f
+        for (i in 0 until 4) {
+            val hh = if (playing) 6f + 10f * kotlin.math.abs(kotlin.math.sin(System.nanoTime() / 1e9 * (4 + i) + i)).toFloat() else 4f
+            ui.card(LayoutBounds(barsX + i * 6f, p.y + 26f - hh / 2f + 6f, 3f, hh), Theme.TEXT_PRIMARY, 1.5f)
+        }
+    }
 
     private fun drawLeft(area: LayoutBounds) {
         val t = MusicPlayer.current

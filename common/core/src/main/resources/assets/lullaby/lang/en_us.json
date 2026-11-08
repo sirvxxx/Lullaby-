@@ -7,5 +7,6 @@
   "key.lullaby.next": "Next track",
   "key.lullaby.volume_up": "Volume up",
   "key.lullaby.volume_down": "Volume down",
-  "key.lullaby.toggle_lyrics": "Toggle lyrics"
+  "key.lullaby.toggle_lyrics": "Toggle lyrics",
+  "key.lullaby.island_toggle": "Island (interact / expand)"
 }
