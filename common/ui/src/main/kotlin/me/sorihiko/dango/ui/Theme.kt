@@ -47,8 +47,8 @@ object Theme {
         frost = 0.85f,
         refraction = 22f,
         bevel = 26f,
-        dispersion = 0.30f,
-        highlight = 1f,
+        dispersion = 0f,
+        highlight = 0.5f,
         shadow = ShadowStyle(Color(0f, 0f, 0f, 0.30f), 36f, Vec2(0f, -10f)),
     )
 
@@ -60,8 +60,8 @@ object Theme {
         frost = 0.55f,
         refraction = 16f,
         bevel = 18f,
-        dispersion = 0.25f,
-        highlight = 0.9f,
+        dispersion = 0f,
+        highlight = 0.45f,
         shadow = ShadowStyle(Color(0f, 0f, 0f, 0.18f), 18f, Vec2(0f, -4f)),
     )
 

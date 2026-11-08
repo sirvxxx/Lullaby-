@@ -72,7 +72,7 @@ class DynamicIslandModule : Module() {
 
     /** Ukuran yang dipakai: di sisi layar lebarnya dan tingginya ditukar (pil berdiri tegak) */
     private fun dims(kind: Kind): Pair<Float, Float> =
-        if (vertical() && kind == Kind.SONG) 72f to 136f          // pil sisi: cover bulat + batang visualizer
+        if (vertical() && kind == Kind.SONG) 72f to 140f          // pil sisi: cover bulat + batang visualizer
         else sizeOf(kind).let { (w0, h0) -> if (vertical()) h0 to w0 else w0 to h0 }
 
     private fun pillPosition(lw: Float, lh: Float, edge: Float, margin: Float): LayoutBounds {
@@ -368,30 +368,29 @@ class DynamicIslandModule : Module() {
         }
     }
 
-    /** Mode samping (mockup): cover bulat di atas, lalu batang visualizer vertikal di bawahnya */
+    /** Mode samping: cover bulat di tengah atas, lalu batang audio vertikal yang bergerak (mirip Spotify) */
     private fun drawSongVertical(ctx: GuiCanvas, b: LayoutBounds) {
         val t = MusicPlayer.current ?: return
         val cx = b.x + b.width / 2f
-        val d = 44f
-        val cover = LayoutBounds(cx - d / 2f, b.y + 14f, d, d)
+        val d = 48f
+        val cover = LayoutBounds(cx - d / 2f, b.y + 12f, d, d)
+        ctx.drawShape(cover, ShapeStyle(Theme.TRACK, d / 2f))     // alas bulat dulu, supaya tepi cover tidak bolong
         CoverCache.upload()
-        val tex = CoverCache.trackRounded(t, 0.5f)
-        if (tex != null) ctx.drawImage(cover, tex)
-        else ctx.drawShape(cover, ShapeStyle(Theme.TRACK, d / 2f))
+        CoverCache.trackRounded(t, 0.5f)?.let { ctx.drawImage(cover, it) }
 
         val playing = MusicPlayer.state == MusicPlayer.State.PLAYING
         val time = System.nanoTime() / 1e9
-        val n = 9
-        val step = 5.6f
-        val top = cover.bottom + 14f
+        val n = 11
+        val step = 5.2f
+        val top = cover.bottom + 12f
         for (i in 0 until n) {
             val amp = if (playing)
-                0.3f + 0.7f * kotlin.math.abs(sin(time * (4.2 + i * 0.73) + i * 1.1)).toFloat()
-            else 0.3f
-            val w = 8f + 30f * amp
+                0.25f + 0.75f * kotlin.math.abs(sin(time * (3.6 + i * 0.61) + i * 0.9)).toFloat()
+            else 0.25f
+            val w = 6f + 34f * amp
             ctx.drawShape(
-                LayoutBounds(cx - w / 2f, top + i * step, w, 2.6f),
-                ShapeStyle(if (playing) Theme.TEXT_PRIMARY else Theme.TEXT_TERTIARY, 1.3f),
+                LayoutBounds(cx - w / 2f, top + i * step, w, 2.4f),
+                ShapeStyle(if (playing) Theme.TEXT_PRIMARY else Theme.TEXT_TERTIARY, 1.2f),
             )
         }
     }

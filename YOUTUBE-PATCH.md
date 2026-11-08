@@ -61,3 +61,8 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Buffer audio: sudah ~0,25 detik di MusicPlayer, tidak diubah (panduan 16 KB akan memperburuk crackling).
 - Audio: clipping dikurangi. Hard clip diganti soft limiter (di atas 85% full scale dibulatkan). Normalisasi tanpa info peak tidak boleh menaikkan gain di atas 1.0.
 - Now Playing: slider volume dihapus (tombol 5 tetap). Dynamic Island mode samping: latar hitam solid seperti mockup. Immersive: sampul lagu jadi latar window, diredupkan di bawah kaca.
+- Cover: tekstur 256x256 (sebelumnya 128x128 = 144p). Sumber Netease sudah minta 500x500.
+- Dynamic Island mode samping: cover bulat di tengah, batang audio vertikal 11 buah yang bergerak.
+- Now Playing: tombol bulat dihapus; antrean memakai seluruh tinggi.
+- Edge: garis putih hover di tepi window dihapus; dispersion (pinggiran pelangi) dimatikan; highlight kaca diturunkan.
+- Logo sidebar: LULLABY+ lebih besar, rata kiri, dengan titik aksen.

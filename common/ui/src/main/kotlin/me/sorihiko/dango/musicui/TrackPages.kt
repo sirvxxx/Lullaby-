@@ -112,8 +112,7 @@ internal class NowPlayingPage(private val screen: MusicScreen) {
     }
 
     private fun drawQueue(area: LayoutBounds) {
-        val controlsH = 74f
-        val list = LayoutBounds(area.x, area.y, area.width, area.height - controlsH - 8f)
+        val list = LayoutBounds(area.x, area.y, area.width, area.height)
         queueArea = list
         val q = MusicPlayer.queue
         val cur = MusicPlayer.current
@@ -139,40 +138,6 @@ internal class NowPlayingPage(private val screen: MusicScreen) {
         }
         ui.endClip()
         if (q.isEmpty()) ui.text(I18n.text("Nothing in the queue yet"), list.x + 4f, list.y + 6f, 12f, Theme.TEXT_TERTIARY)
-        drawControls(LayoutBounds(area.x, area.bottom - controlsH, area.width, controlsH))
-    }
-
-    /** Lima tombol bulat di atas, volume di bawahnya */
-    private fun drawControls(area: LayoutBounds) {
-        val d = 44f
-        val cy = area.y + 34f
-        val step = area.width / 5f
-        fun cx(i: Int) = area.x + step * (i + 0.5f)
-        val module = DangoMusic.instance.moduleManager.get(NeteaseMusicModule::class.java)
-        circle(cx(0), cy, d, MusicPlayer.repeatOne, "↻") { module.toggleRepeatOne() }
-        circle(cx(1), cy, d, false, "◀") { MusicPlayer.prev() }
-        playPause(cx(2), cy, 56f)
-        circle(cx(3), cy, d, false, "▶") { MusicPlayer.next() }
-        circle(cx(4), cy, d, MusicPlayer.shuffle, "⇄") { module.toggleShuffle() }
-    }
-
-    private fun circle(cx: Float, cy: Float, d: Float, on: Boolean, glyph: String, action: () -> Unit) {
-        val b = LayoutBounds(cx - d / 2f, cy - d / 2f, d, d)
-        ui.card(b, if (on) RED else Theme.CARD, d / 2f)
-        ui.icon(glyph, cx, cy, 14f, if (on) Theme.TEXT_PRIMARY else Theme.TEXT_SECONDARY)
-        ui.hits += b to action
-    }
-
-    private fun playPause(cx: Float, cy: Float, d: Float) {
-        val b = LayoutBounds(cx - d / 2f, cy - d / 2f, d, d)
-        ui.card(b, RED, d / 2f)
-        if (MusicPlayer.state == MusicPlayer.State.PLAYING) {
-            ui.card(LayoutBounds(cx - 8f, cy - 9f, 5f, 18f), Theme.TEXT_PRIMARY, 2f)
-            ui.card(LayoutBounds(cx + 3f, cy - 9f, 5f, 18f), Theme.TEXT_PRIMARY, 2f)
-        } else {
-            ui.icon("▶", cx + 2f, cy, 18f, Theme.TEXT_PRIMARY)
-        }
-        ui.hits += b to { MusicPlayer.togglePause() }
     }
 
     /** Kanan: cover di tengah, kotak judul, lalu panel lirik yang bisa di-scroll */

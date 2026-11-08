@@ -444,7 +444,7 @@ class MusicScreen(
         val w = winRect
         val hover = grab ?: grabAt(ui.mx, ui.my)
         val k = edgeGlow.tick(if (hover != null && hover != Grab.MOVE) 1f else 0f).coerceIn(0f, 1f)
-        if (k > 0.01f) ui.ctx.drawShape(w, ShapeStyle(Color.TRANSPARENT, Theme.GLASS_WINDOW.radius, 1.5f, Color(1f, 1f, 1f, 0.35f * k)))
+        // garis putih di tepi window dihapus (dulu muncul saat kursor dekat tepi)
     }
 
     private val edgeGlow = me.sorihiko.dango.musicui.Spring(300f, 26f)

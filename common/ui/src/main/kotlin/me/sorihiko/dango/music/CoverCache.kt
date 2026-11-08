@@ -26,7 +26,7 @@ import kotlin.math.min
  */
 object CoverCache {
 
-    /** 纹理大约保留多少张（128×128，一张 64 KB 显存） */
+    /** 纹理大约保留多少张（256×256，一张 256 KB 显存） */
     private const val MAX = 160
     /** 下载好的图片保留多少张（一张 64 KB 内存） */
     private const val MAX_SOURCES = 400
@@ -141,7 +141,7 @@ object CoverCache {
                     if (img == null) {
                         why = "unreadable image (${bytes.size} bytes)"
                     } else {
-                        ready.add(key to square(img, 128))
+                        ready.add(key to square(img, 256))
                         failedAt.remove(key)
                         ok = true
                     }
