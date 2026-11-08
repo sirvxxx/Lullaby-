@@ -11,6 +11,7 @@ import me.sorihiko.dango.musicui.Library
 import me.sorihiko.dango.musicui.TrackCardGrid
 import me.sorihiko.dango.musicui.NowPlayingPage
 import me.sorihiko.dango.musicui.QueuePage
+import me.sorihiko.dango.DangoMusic
 import me.sorihiko.dango.musicui.IslandRects
 import me.sorihiko.dango.musicui.IslandState
 import me.sorihiko.dango.music.CloudDrives
