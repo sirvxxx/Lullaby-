@@ -322,9 +322,7 @@ class MusicScreen(
     /** true = hanya panel island yang di-expand (dibuka dengan menahan Alt) */
     var islandOnly = false
     /** posisi animasi island: 0 = pill, 1 = panel penuh */
-    private var islandT = 0f
     private var islandExpanded = false
-    private var islandClosing = false
 
     private fun islandSetVolume(v: Float) {
         DangoMusic.instance.moduleManager.get(me.sorihiko.dango.module.impls.music.NeteaseMusicModule::class.java).setVolume(v)

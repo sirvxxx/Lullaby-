@@ -354,7 +354,9 @@ class DynamicIslandModule : Module() {
         }
 
         // tombol: prev, play/pause, next
-        for (btnRect in listOf(r.prev, r.play, r.next)) ctx.drawShape(btnRect, ShapeStyle(Theme.CARD, btnRect.width / 2f))
+        ctx.drawShape(r.prev, ShapeStyle(Theme.CARD, r.prev.width / 2f))
+        ctx.drawShape(r.play, ShapeStyle(Theme.CARD, r.play.width / 2f))
+        ctx.drawShape(r.next, ShapeStyle(Theme.CARD, r.next.width / 2f))
         glyphCentered(ctx, "◀", r.prev, Theme.TEXT_SECONDARY)
         if (playing) {
             val pc = r.play
@@ -427,7 +429,7 @@ class DynamicIslandModule : Module() {
         val t = MusicPlayer.current ?: return
         // 胶囊两头是半圆：封面往里挪一点、圆角跟着胶囊的弧度走，看起来才居中
         val cw = clockW()
-        if (cw > 0f) text(ctx, clockText(), b.x + 10f, b.y + b.height / 2f - 0.39f * 12f, 12f, Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
+        if (cw > 0f) text(ctx, clockText(), b.x + 13f, b.y + b.height / 2f - 0.39f * 12f, 12f, Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
         val cover = LayoutBounds(b.x + 9f + cw, b.y + 5f, 22f, 22f)
         drawCover(ctx, cover, t.let { CoverCache.trackRounded(it, 0.36f) ?: CoverCache.track(it) })
         val playing = MusicPlayer.state == MusicPlayer.State.PLAYING
@@ -478,10 +480,22 @@ class DynamicIslandModule : Module() {
     private val showClock = BooleanValue(true)
 
     /** Jam sekarang (HH:mm), dihitung ulang setiap frame */
-    private fun clockText(): String = java.time.LocalTime.now().let { "%02d:%02d".format(it.hour, it.minute) }
+    /** jam dihitung sekali per detik, dan lebarnya ikut disimpan (bukan tiap frame) */
+    private var clockSec = -1L
+    private var clockStr = ""
+    private var clockWidth = 0f
+    private fun clockText(): String {
+        val sec = System.currentTimeMillis() / 1000L
+        if (sec != clockSec) {
+            clockSec = sec
+            clockStr = java.time.LocalTime.now().let { "%02d:%02d".format(it.hour, it.minute) }
+            clockWidth = mt.width(clockStr, 14f, Theme.FONT_SEMIBOLD)
+        }
+        return clockStr
+    }
 
     /** Lebar yang dipakai jam (0 kalau dimatikan) */
-    private fun clockW(): Float = if (showClock.get()) width(clockText(), 14f, Theme.FONT_SEMIBOLD) + 14f else 0f
+    private fun clockW(): Float = if (showClock.get()) { clockText(); clockWidth + 14f } else 0f
 
     private val sideBars = FloatArray(11)
 

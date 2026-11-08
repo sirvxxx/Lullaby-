@@ -123,7 +123,6 @@ class NeteaseMusicModule : Module() {
 
     @ModuleValue("Fast glass", "Potato mode: no blur on the music screen, flat glass, less GPU work")
     private val fastGlass = BooleanValue(false)
-    private var altWasDown = false
 
     @ModuleValue("Blur resolution", "Lower = cheaper glass blur, a little blurrier (1x, 0.5x, 0.25x)")
     private val blurRes = IntValue(0, 2, 0)
@@ -319,7 +318,6 @@ class NeteaseMusicModule : Module() {
             me.sorihiko.dango.musicui.IslandState.lastFrame = System.currentTimeMillis()
             DangoMusic.instance.platform.openIslandScreen()
         }
-        altWasDown = altDown
         UpdateChecker.tick(checkUpdates.get())
         // 快速玻璃（Potato）：全局开关，界面每帧读取；放在 enabled 检查之前，播放器关着也生效
         me.sorihiko.dango.Performance.lowEnd = fastGlass.get()
