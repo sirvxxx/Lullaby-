@@ -255,6 +255,9 @@ class DynamicIslandModule : Module() {
             val top = 18f * sf / k                       // 和原来一样，留出 Boss 血条的位置
             val lh = platform.windowHeight / k
             val pill = pillPosition(lw, lh, top, 14f * sf / k)
+            // animasi mengembang / mengecil dijalankan di sini, jadi tetap jalan walau layar island sudah tutup
+            if (System.currentTimeMillis() - IslandState.lastFrame > 500L) IslandState.expandTarget = false
+            IslandState.expandT += ((if (IslandState.expandTarget) 1f else 0f) - IslandState.expandT) * 0.2f
             IslandState.setPill(pill.x, pill.y, pill.width, pill.height, lw, lh)
             // ukuran island yang sudah expand (di tengah atas), dan keadaan animasinya
             val full = LayoutBounds((lw - 480f) / 2f, top, 480f, 160f)
@@ -274,7 +277,7 @@ class DynamicIslandModule : Module() {
                 ctx.drawShape(
                     rect,
                     ShapeStyle(
-                        Color(0.02f, 0.02f, 0.03f, 0.9f), bgRadius, 1f, Color(1f, 1f, 1f, 0.07f),
+                        islandBg(e), bgRadius, 1f, Color(1f, 1f, 1f, 0.07f),
                         ShadowStyle(Color(0f, 0f, 0f, 0.18f), 8f, Vec2(0f, -2f)),
                     )
                 )
@@ -311,6 +314,18 @@ class DynamicIslandModule : Module() {
     }
 
     private fun islandLerp(a: Float, b: Float, t: Float) = a + (b - a) * t
+
+    /** latar island: gelap; saat mengembang berubah ke warna dominan cover (immersive) */
+    private fun islandBg(e: Float): Color {
+        val a = MusicPlayer.current?.let { CoverCache.accent(it) } ?: return Color(0.02f, 0.02f, 0.03f, 0.9f)
+        val k = (e * 0.6f).coerceIn(0f, 1f)
+        return Color(
+            0.02f + (a.first * 0.45f - 0.02f) * k,
+            0.02f + (a.second * 0.45f - 0.02f) * k,
+            0.03f + (a.third * 0.45f - 0.03f) * k,
+            0.9f,
+        )
+    }
 
     /** Isi island saat expand: cover, judul + jam (satu garis), artis, progres, tombol, volume, lirik, search. */
     private fun drawExpanded(ctx: GuiCanvas, b: LayoutBounds) {
@@ -412,13 +427,13 @@ class DynamicIslandModule : Module() {
         val t = MusicPlayer.current ?: return
         // 胶囊两头是半圆：封面往里挪一点、圆角跟着胶囊的弧度走，看起来才居中
         val cw = clockW()
-        if (cw > 0f) text(ctx, clockText(), b.x + 10f, b.y + b.height / 2f - 7f, 12f, Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
+        if (cw > 0f) text(ctx, clockText(), b.x + 10f, b.y + b.height / 2f - 6f, 12f, Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
         val cover = LayoutBounds(b.x + 9f + cw, b.y + 5f, 22f, 22f)
         drawCover(ctx, cover, t.let { CoverCache.trackRounded(it, 0.36f) ?: CoverCache.track(it) })
         val playing = MusicPlayer.state == MusicPlayer.State.PLAYING
         val tx = cover.right + 9f
         val title = trim(t.name, 170f, 12f, Theme.FONT_SEMIBOLD)
-        text(ctx, title, tx, b.y + b.height / 2f - 7f, 12f, if (playing) Theme.TEXT_PRIMARY else Theme.TEXT_SECONDARY, Theme.FONT_SEMIBOLD)
+        text(ctx, title, tx, b.y + b.height / 2f - 6f, 12f, if (playing) Theme.TEXT_PRIMARY else Theme.TEXT_SECONDARY, Theme.FONT_SEMIBOLD)
         bars(ctx, b.right - 12f - 14f, b.y + 22f, playing, 11f)
     }
 

@@ -359,14 +359,11 @@ class MusicScreen(
         if (!islandOnly) IslandState.open = false
         if (islandOnly) {
             IslandState.lastFrame = System.currentTimeMillis()
-            // animasi: membesar saat expand, mengecil saat pill ditutup
-            islandT += ((if (islandExpanded) 1f else 0f) - islandT) * 0.2f
-            IslandState.expandT = islandT
-            // tutup hanya kalau pill kecil dan Alt sudah dilepas (kursor ikut hilang)
-            if (!islandExpanded && islandT < 0.02f && !IslandState.altHeld) {
+            IslandState.expandTarget = islandExpanded
+            // pill kecil dan Alt dilepas: tutup seketika (kursor langsung hilang).
+            // Pill yang sedang mengecil tetap dianimasikan oleh modul island.
+            if (!islandExpanded && !IslandState.altHeld) {
                 IslandState.open = false
-                islandT = 0f
-                IslandState.expandT = 0f
                 closed = true
                 closeScreen()
                 return
@@ -376,11 +373,11 @@ class MusicScreen(
             try {
                 val pill = IslandState.startRect(ui.lw, ui.lh)
                 val expanded = IslandState.expandedRect(ui.lw, ui.lh)
-                if (!islandExpanded && islandT < 0.02f && pill != null) {
+                if (!islandExpanded && pill != null) {
                     // pill kecil: klik untuk membesarkan
                     ui.hits += pill to { islandExpanded = true }
                 }
-                if (expanded != null && (islandExpanded || islandT > 0.02f)) {
+                if (expanded != null && (islandExpanded || IslandState.expandT > 0.02f)) {
                     val r = IslandRects(expanded)
                     ui.hits += r.prev to { MusicPlayer.prev() }
                     ui.hits += r.play to { MusicPlayer.togglePause() }

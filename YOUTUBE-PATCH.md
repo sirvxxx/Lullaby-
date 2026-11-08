@@ -113,3 +113,6 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Panel besar: tata letak dirapikan (tombol di tengah, progress tidak menabrak tombol).
 - Pill kecil: jam dan judul tepat di tengah pill.
 - Panel besar: tata letak dirapikan. Pill kecil: judul di tengah pill vertikal.
+- Pill kecil: judul dan jam turun 1px (lebih ke tengah visual).
+- Pill besar: latar berwarna mengikuti cover saat mengembang.
+- Kursor: pill kecil + Alt dilepas = layar langsung tutup. Animasi mengecil dijalankan modul island.

@@ -15,6 +15,8 @@ object IslandState {
     @Volatile var lastFrame = 0L
     /** Alt sedang ditahan (dicek setiap tick) */
     @Volatile var altHeld = false
+    /** target animasi: true = mengembang. Dijalankan modul island, jadi tetap jalan setelah layar tutup */
+    @Volatile var expandTarget = false
     /** 0 = island asli, 1 = expand penuh */
     @Volatile var expandT = 0f
 
