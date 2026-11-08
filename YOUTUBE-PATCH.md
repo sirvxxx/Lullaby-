@@ -116,3 +116,4 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Pill kecil: judul dan jam turun 1px (lebih ke tengah visual).
 - Pill besar: latar berwarna mengikuti cover saat mengembang.
 - Kursor: pill kecil + Alt dilepas = layar langsung tutup. Animasi mengecil dijalankan modul island.
+- Teks center: Theme.drawText memakai centerY = y + 0.39*size, jadi y = center - 0.39*size (sebelumnya terlalu tinggi ~2px).

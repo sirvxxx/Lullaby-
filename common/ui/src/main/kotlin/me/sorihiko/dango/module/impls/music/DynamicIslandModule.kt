@@ -377,7 +377,7 @@ class DynamicIslandModule : Module() {
         val lmid = r.lyrics.y + r.lyrics.height / 2f
         if (lines.isEmpty()) {
             val msg = if (lyrics == null && !Library.lyricsReady(t)) "Loading lyrics..." else "No lyrics"
-            centeredText(ctx, msg, lcx, lmid - 6f, 11f, Theme.TEXT_TERTIARY)
+            centeredText(ctx, msg, lcx, lmid - 0.39f * 11f, 11f, Theme.TEXT_TERTIARY)
         } else {
             val idx = max(0, lyrics!!.indexAt(MusicPlayer.positionMs))
             for (k in -1..1) {
@@ -387,19 +387,19 @@ class DynamicIslandModule : Module() {
                 val size = if (active) 14f else 11f
                 val font = if (active) Theme.FONT_SEMIBOLD else Theme.FONT_REGULAR
                 val color = if (active) Theme.TEXT_PRIMARY else Theme.TEXT_TERTIARY
-                centeredText(ctx, trim(lines[j].text, r.lyrics.width - 16f, size, font), lcx, lmid + k * 24f - 7f, size, color, font)
+                centeredText(ctx, trim(lines[j].text, r.lyrics.width - 16f, size, font), lcx, lmid + k * 24f - 0.39f * size, size, color, font)
             }
         }
 
         // search bar
         ctx.drawShape(r.search, ShapeStyle(Theme.CARD, r.search.height / 2f))
-        text(ctx, I18n.text("Search songs..."), r.search.x + 14f, r.search.y + r.search.height / 2f - 6f, 11f, Theme.TEXT_TERTIARY)
+        text(ctx, I18n.text("Search songs..."), r.search.x + 14f, r.search.y + r.search.height / 2f - 0.39f * 11f, 11f, Theme.TEXT_TERTIARY)
     }
 
     private fun glyphCentered(ctx: GuiCanvas, s: String, b: LayoutBounds, color: Color) {
         val cx = b.x + b.width / 2f
         val cy = b.y + b.height / 2f
-        text(ctx, s, cx - width(s, 12f) / 2f, cy - 7f, 12f, color)
+        text(ctx, s, cx - width(s, 12f) / 2f, cy - 0.39f * 12f, 12f, color)
     }
 
     private fun centeredText(ctx: GuiCanvas, s: String, cx: Float, y: Float, size: Float, color: Color, font: String = Theme.FONT_REGULAR) {
@@ -427,13 +427,13 @@ class DynamicIslandModule : Module() {
         val t = MusicPlayer.current ?: return
         // 胶囊两头是半圆：封面往里挪一点、圆角跟着胶囊的弧度走，看起来才居中
         val cw = clockW()
-        if (cw > 0f) text(ctx, clockText(), b.x + 10f, b.y + b.height / 2f - 6f, 12f, Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
+        if (cw > 0f) text(ctx, clockText(), b.x + 10f, b.y + b.height / 2f - 0.39f * 12f, 12f, Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
         val cover = LayoutBounds(b.x + 9f + cw, b.y + 5f, 22f, 22f)
         drawCover(ctx, cover, t.let { CoverCache.trackRounded(it, 0.36f) ?: CoverCache.track(it) })
         val playing = MusicPlayer.state == MusicPlayer.State.PLAYING
         val tx = cover.right + 9f
         val title = trim(t.name, 170f, 12f, Theme.FONT_SEMIBOLD)
-        text(ctx, title, tx, b.y + b.height / 2f - 6f, 12f, if (playing) Theme.TEXT_PRIMARY else Theme.TEXT_SECONDARY, Theme.FONT_SEMIBOLD)
+        text(ctx, title, tx, b.y + b.height / 2f - 0.39f * 12f, 12f, if (playing) Theme.TEXT_PRIMARY else Theme.TEXT_SECONDARY, Theme.FONT_SEMIBOLD)
         bars(ctx, b.right - 12f - 14f, b.y + 22f, playing, 11f)
     }
 
