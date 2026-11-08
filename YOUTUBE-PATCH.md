@@ -104,3 +104,4 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Jam realtime pindah ke tampilan island biasa (saat lagu diputar), tidak lagi di notifikasi ganti lagu.
 - Alt: sekali tekan untuk mengaktifkan island (kursor bebas), klik pill untuk expand, Alt lagi / Esc / klik di luar untuk menutup. Tidak perlu ditahan. Perbaikan: kode Alt sebelumnya salah (342 dipakai sebagai kode internal).
 - Tombol island bisa diganti dari menu Controls (aksi "Island (interact / expand)", default Alt).
+- Perbaikan build: IslandPanel.drawCompact memakai ui.width (bukan width).

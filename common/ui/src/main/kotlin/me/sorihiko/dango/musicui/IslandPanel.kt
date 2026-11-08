@@ -73,7 +73,7 @@ internal class IslandPanel(private val screen: MusicScreen) {
         val t = MusicPlayer.current ?: return
         val playing = MusicPlayer.state == MusicPlayer.State.PLAYING
         val clock = java.time.LocalTime.now().let { "%02d:%02d".format(it.hour, it.minute) }
-        val cw = width(clock, 12f, Theme.FONT_SEMIBOLD) + 12f
+        val cw = ui.width(clock, 12f, Theme.FONT_SEMIBOLD) + 12f
         ui.text(clock, p.x + 14f, p.y + (p.height - 14f) / 2f, 12f, Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
         val cover = LayoutBounds(p.x + 14f + cw, p.y + 10f, 56f, 56f)
         ui.drawCover(cover, CoverCache.trackRounded(t, 0.5f), 28f)
