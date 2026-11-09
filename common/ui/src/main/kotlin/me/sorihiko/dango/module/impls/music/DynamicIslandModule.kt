@@ -340,8 +340,9 @@ class DynamicIslandModule : Module() {
         // jam dan judul di garis y yang sama
         val clock = clockText()
         val clockW = width(clock, 13f, Theme.FONT_SEMIBOLD)
-        val titleW = b.width * 0.5f - (r.titleX - b.x) - 16f - clockW - 10f
-        text(ctx, clock, b.x + b.width * 0.5f - 16f - clockW, r.titleY, 13f, Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
+        val titleW = b.width * 0.5f - (r.titleX - b.x) - 16f
+        // jam naik ke tepi atas cover (di kanan kolom kiri), judul dan artis dapat lebar penuh
+        text(ctx, clock, b.x + b.width * 0.5f - 16f - clockW, r.cover.y, 13f, Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
         text(ctx, trim(t.name, titleW, 13f, Theme.FONT_SEMIBOLD), r.titleX, r.titleY, 13f, Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
         text(ctx, trim(t.artists.joinToString(" / "), titleW, 11f), r.titleX, r.artistY, 11f, Theme.TEXT_SECONDARY)
 
@@ -389,17 +390,26 @@ class DynamicIslandModule : Module() {
             for (j in base - 2..base + 2) {
                 if (j < 0 || j >= lines.size) continue
                 val dist = kotlin.math.abs(j - lyricPos).coerceAtMost(1f)
-                val size = 12f + 2f * (1f - dist)
                 val font = if (dist < 0.5f) Theme.FONT_SEMIBOLD else Theme.FONT_REGULAR
+                val maxW = r.lyrics.width - 16f
+                // lirik panjang: font diperkecil dulu supaya muat, baru dipotong kalau sudah di ukuran minimum
+                val size = fitSize(lines[j].text, maxW, 12f + 2f * (1f - dist), font)
                 val col = Color(Theme.TEXT_PRIMARY.r, Theme.TEXT_PRIMARY.g, Theme.TEXT_PRIMARY.b, 1f - dist * 0.65f)
                 val y = lmid + (j - lyricPos) * 24f - 0.39f * size
-                centeredText(ctx, trim(lines[j].text, r.lyrics.width - 16f, size, font), lcx, y, size, col, font)
+                centeredText(ctx, trim(lines[j].text, maxW, size, font), lcx, y, size, col, font)
             }
         }
 
         // search bar
         ctx.drawShape(r.search, ShapeStyle(Theme.CARD, r.search.height / 2f))
         text(ctx, I18n.text("Search songs..."), r.search.x + 14f, r.search.y + r.search.height / 2f - 0.39f * 11f, 11f, Theme.TEXT_TERTIARY)
+    }
+
+    /** kecilkan ukuran font sampai teks muat dalam maxW (minimal 10px) */
+    private fun fitSize(text: String, maxW: Float, size: Float, font: String): Float {
+        var sz = size
+        while (sz > 10f && width(text, sz, font) > maxW) sz -= 0.5f
+        return sz
     }
 
     private fun glyphCentered(ctx: GuiCanvas, s: String, b: LayoutBounds, color: Color) {

@@ -123,3 +123,5 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Pill kecil: jam digeser lagi 3px ke kanan.
 - Panel besar: judul lebih dekat ke artis, progress dan tombol dinaikkan dari tepi bawah.
 - Lirik panel besar: gulir halus per baris (baris aktif besar dan terang, baris lain memudar).
+- Panel besar: jam naik ke tepi atas cover, judul dan artis dapat lebar penuh (tidak terpotong).
+- Lirik panjang: font diperkecil otomatis sampai muat (minimal 10px), baru dipotong dengan "..." kalau masih tidak muat.
