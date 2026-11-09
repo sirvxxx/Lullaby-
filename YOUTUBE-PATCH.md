@@ -125,3 +125,6 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Lirik panel besar: gulir halus per baris (baris aktif besar dan terang, baris lain memudar).
 - Panel besar: jam naik ke tepi atas cover, judul dan artis dapat lebar penuh (tidak terpotong).
 - Lirik panjang: font diperkecil otomatis sampai muat (minimal 10px), baru dipotong dengan "..." kalau masih tidak muat.
+- Pencarian di panel besar: klik search bar lalu ketik, Enter untuk mencari (tanpa keluar dari island). Hasil muncul sebagai panel baru di bawah island yang keluar dengan animasi. + menambah ke antrean, klik baris memutar lagu.
+- Hasil pencarian island: bisa digulir dengan roda mouse (lebih dari 4 hasil). Pencarian baru mengembalikan gulir ke atas.
+- Latar immersive panel besar: cover samar di belakang panel.

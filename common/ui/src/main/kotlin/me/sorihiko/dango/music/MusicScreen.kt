@@ -257,6 +257,12 @@ class MusicScreen(
     }
 
     internal fun doSearch() {
+        // dari island: cari tanpa meninggalkan island, hasilnya tampil di panel bawah
+        if (islandOnly) {
+            val q = sidebar.searchText.trim()
+            if (q.isNotEmpty()) { Library.search(q); IslandState.searchScroll = 0f }
+            return
+        }
         pendingLogin?.let { which ->
             val c = sidebar.searchText.trim()
             pendingLogin = null
@@ -323,6 +329,8 @@ class MusicScreen(
     var islandOnly = false
     /** posisi animasi island: 0 = pill, 1 = panel penuh */
     private var islandExpanded = false
+    /** kotak search di panel besar sedang dipakai (hasil tampil di bawah) */
+    private var islandSearchActive = false
 
     private fun islandSetVolume(v: Float) {
         DangoMusic.instance.moduleManager.get(me.sorihiko.dango.module.impls.music.NeteaseMusicModule::class.java).setVolume(v)
@@ -330,9 +338,22 @@ class MusicScreen(
     }
 
     /** Dari island yang sudah expand: buka GUI penuh dengan kotak search aktif */
+    /** roda mouse di panel hasil pencarian island: geser daftarnya */
+    private fun scrollIslandResults(lx: Float, ly: Float, wheel: Int): Boolean {
+        if (!islandOnly || !islandSearchActive) return false
+        val results = Library.searchResults ?: return false
+        val exp = IslandState.expandedRect(ui.lw, ui.lh) ?: return false
+        val rows = minOf(results.size, 4)
+        val box = IslandRects(exp).resultsRect(rows)
+        if (!box.contains(lx, ly)) return false
+        val maxScroll = maxOf(0f, results.size - rows.toFloat())
+        IslandState.searchScroll = (IslandState.searchScroll + if (wheel > 0) -1f else 1f).coerceIn(0f, maxScroll)
+        return true
+    }
+
     internal fun openSearchFromIsland() {
-        islandOnly = false
-        IslandState.open = false
+        islandSearchActive = true
+        sidebar.searchText = ""
         sidebar.searchFocused = true
     }
 
@@ -358,8 +379,14 @@ class MusicScreen(
         if (islandOnly) {
             IslandState.lastFrame = System.currentTimeMillis()
             IslandState.expandTarget = islandExpanded
-            // pill kecil dan Alt dilepas: tutup seketika (kursor langsung hilang).
-            // Pill yang sedang mengecil tetap dianimasikan oleh modul island.
+            IslandState.query = sidebar.searchText
+            // panel pencarian hanya hidup selama island terbuka
+            if (!islandExpanded) {
+                islandSearchActive = false
+                sidebar.searchFocused = false
+            }
+            IslandState.searchTarget = islandSearchActive && islandExpanded
+            // pill kecil dan Alt dilepas: tutup seketika (kursor langsung hilang)
             if (!islandExpanded && !IslandState.altHeld) {
                 IslandState.open = false
                 closed = true
@@ -384,6 +411,20 @@ class MusicScreen(
                         islandSetVolume(((ui.mx - r.volume.x) / r.volume.width).coerceIn(0f, 1f))
                     }
                     ui.hits += r.search to { openSearchFromIsland() }
+                    // hasil pencarian: + menambah ke antrean, klik baris memutar lagu itu
+                    val results = Library.searchResults
+                    if (islandSearchActive && IslandState.searchT > 0.02f && !results.isNullOrEmpty()) {
+                        val rows = min(results.size, 4)
+                        val box = r.resultsRect(rows)
+                        val scroll = IslandState.searchScroll.coerceIn(0f, maxOf(0f, results.size - rows.toFloat()))
+                        for (i in results.indices) {
+                            val row = r.resultRowAt(box, i - scroll)
+                            if (row.y + row.height < box.y || row.y > box.bottom) continue
+                            val track = results[i]
+                            ui.hits += r.resultPlus(row) to { MusicPlayer.enqueueLast(track) }
+                            ui.hits += row to { MusicPlayer.playQueue(results, i) }
+                        }
+                    }
                     // klik di luar panel yang terbuka: mengecilkan pill (paling akhir = prioritas terendah)
                     if (islandExpanded) ui.hits += LayoutBounds(0f, 0f, ui.lw, ui.lh) to { islandExpanded = false }
                 }
@@ -756,6 +797,7 @@ class MusicScreen(
             sidebar.listArea.contains(lx, ly) -> sidebar.scrollBy(step)
             nowPlaying.queueArea.contains(lx, ly) -> nowPlaying.scrollQueue(wheel)
             nowPlaying.lyricArea.contains(lx, ly) -> nowPlaying.scrollLyric(wheel)
+            scrollIslandResults(lx, ly, wheel) -> {}
             queuePage.area.contains(lx, ly) -> queuePage.scroll(wheel)
             trackGrid.area.contains(lx, ly) -> trackGrid.scroll(wheel)
             grid.area.contains(lx, ly) -> grid.scroll(wheel)

@@ -257,6 +257,8 @@ class DynamicIslandModule : Module() {
             val pill = pillPosition(lw, lh, top, 14f * sf / k)
             // animasi mengembang / mengecil dijalankan di sini, jadi tetap jalan walau layar island sudah tutup
             if (System.currentTimeMillis() - IslandState.lastFrame > 500L) IslandState.expandTarget = false
+            if (System.currentTimeMillis() - IslandState.lastFrame > 500L) IslandState.searchTarget = false
+            IslandState.searchT += ((if (IslandState.searchTarget) 1f else 0f) - IslandState.searchT) * 0.2f
             IslandState.expandT += ((if (IslandState.expandTarget) 1f else 0f) - IslandState.expandT) * 0.2f
             IslandState.setPill(pill.x, pill.y, pill.width, pill.height, lw, lh)
             // ukuran island yang sudah expand (di tengah atas), dan keadaan animasinya
@@ -303,6 +305,7 @@ class DynamicIslandModule : Module() {
             if (expandAlpha > 0.01f) {
                 ctx.pushOpacity(expandAlpha)
                 drawExpanded(ctx, full)
+                if (IslandState.searchT > 0.01f) drawSearchPanel(ctx, full, IslandState.searchT, k)
                 ctx.popOpacity()
             }
             ctx.popTransform()
@@ -335,6 +338,12 @@ class DynamicIslandModule : Module() {
         ctx.drawShape(LayoutBounds(b.x + b.width * 0.5f, b.y + 16f, 1f, b.height - 32f), ShapeStyle(Color(1f, 1f, 1f, 0.12f), 0.5f))
 
         CoverCache.upload()
+        // latar immersive: cover samar di belakang panel
+        CoverCache.trackRounded(t, 0.12f)?.let {
+            ctx.pushOpacity(0.2f)
+            ctx.drawImage(LayoutBounds(b.x + 4f, b.y + 4f, b.width - 8f, b.height - 8f), it)
+            ctx.popOpacity()
+        }
         CoverCache.trackRounded(t, 0.2f)?.let { ctx.drawImage(r.cover, it) }
 
         // jam dan judul di garis y yang sama
@@ -402,7 +411,10 @@ class DynamicIslandModule : Module() {
 
         // search bar
         ctx.drawShape(r.search, ShapeStyle(Theme.CARD, r.search.height / 2f))
-        text(ctx, I18n.text("Search songs..."), r.search.x + 14f, r.search.y + r.search.height / 2f - 0.39f * 11f, 11f, Theme.TEXT_TERTIARY)
+        val typed = IslandState.query
+        text(ctx, if (typed.isEmpty()) I18n.text("Search songs...") else typed, r.search.x + 14f,
+            r.search.y + r.search.height / 2f - 0.39f * 11f, 11f,
+            if (typed.isEmpty()) Theme.TEXT_TERTIARY else Theme.TEXT_PRIMARY)
     }
 
     /** kecilkan ukuran font sampai teks muat dalam maxW (minimal 10px) */
@@ -410,6 +422,49 @@ class DynamicIslandModule : Module() {
         var sz = size
         while (sz > 10f && width(text, sz, font) > maxW) sz -= 0.5f
         return sz
+    }
+
+    /** Panel hasil pencarian: keluar dari bawah island yang sudah expand, tingginya dianimasikan dengan e */
+    private fun drawSearchPanel(ctx: GuiCanvas, full: LayoutBounds, e: Float, k: Float) {
+        val results = Library.searchResults
+        val rows = if (results.isNullOrEmpty()) 1 else min(results.size, 4)
+        val rects = IslandRects(full)
+        val box = rects.resultsRect(rows)
+        val clip = LayoutBounds(box.x, box.y, box.width, box.height * e)
+        if (clip.height < 1f) return
+        ctx.drawShape(clip, ShapeStyle(Color(0.02f, 0.02f, 0.03f, 0.9f), 18f, 1f, Color(1f, 1f, 1f, 0.07f)))
+        // hanya yang sudah "terbuka" yang terlihat: potong ke tinggi animasi
+        ctx.noScissor()
+        ctx.scissor((clip.x * k).toInt(), (platform.windowHeight - (clip.y + clip.height) * k).toInt(),
+            (clip.width * k).toInt() + 1, (clip.height * k).toInt() + 1)
+        val cx = box.x + box.width / 2f
+        val cy = box.y + box.height / 2f - 0.39f * 11f
+        when {
+            IslandState.query.isEmpty() -> centeredText(ctx, "Type a song, then press Enter", cx, cy, 11f, Theme.TEXT_TERTIARY)
+            results == null -> centeredText(ctx, "Searching...", cx, cy, 11f, Theme.TEXT_TERTIARY)
+            results.isEmpty() -> centeredText(ctx, "No results", cx, cy, 11f, Theme.TEXT_TERTIARY)
+            else -> {
+                CoverCache.upload()
+                val scroll = IslandState.searchScroll.coerceIn(0f, maxOf(0f, results.size - rows.toFloat()))
+                for (i in results.indices) {
+                    val row = rects.resultRowAt(box, i - scroll)
+                    if (row.y + row.height < box.y || row.y > box.bottom) continue
+                    val t = results[i]
+                    ctx.drawShape(row, ShapeStyle(Theme.CARD, 10f))
+                    CoverCache.trackRounded(t, 0.2f)?.let {
+                        ctx.drawImage(LayoutBounds(row.x + 6f, row.y + 6f, row.height - 12f, row.height - 12f), it)
+                    }
+                    val plus = rects.resultPlus(row)
+                    val tx = row.x + row.height + 6f
+                    val tw = plus.x - tx - 8f
+                    text(ctx, trim(t.name, tw, 12f, Theme.FONT_SEMIBOLD), tx, row.y + row.height * 0.2f, 12f,
+                        Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
+                    text(ctx, trim(t.artists.firstOrNull().orEmpty(), tw, 10f), tx, row.y + row.height * 0.56f, 10f, Theme.TEXT_TERTIARY)
+                    ctx.drawShape(plus, ShapeStyle(Theme.CARD, plus.width / 2f))
+                    glyphCentered(ctx, "+", plus, Theme.TEXT_PRIMARY)
+                }
+            }
+        }
     }
 
     private fun glyphCentered(ctx: GuiCanvas, s: String, b: LayoutBounds, color: Color) {

@@ -17,6 +17,12 @@ object IslandState {
     @Volatile var altHeld = false
     /** target animasi: true = mengembang. Dijalankan modul island, jadi tetap jalan setelah layar tutup */
     @Volatile var expandTarget = false
+    /** panel pencarian: target dan posisi animasinya (0..1), dan teks yang sedang diketik */
+    @Volatile var searchTarget = false
+    @Volatile var searchT = 0f
+    @Volatile var query = ""
+    /** posisi gulir hasil pencarian, dalam jumlah baris */
+    @Volatile var searchScroll = 0f
     /** 0 = island asli, 1 = expand penuh */
     @Volatile var expandT = 0f
 
