@@ -129,3 +129,4 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Hasil pencarian island: bisa digulir dengan roda mouse (lebih dari 4 hasil). Pencarian baru mengembalikan gulir ke atas.
 - Latar immersive panel besar: cover samar di belakang panel.
 - Perbaikan build: scrollIslandResults memakai Int (sesuai LayoutBounds.contains); drawSearchPanel memakai DangoClient.platform.
+- Panel hasil pencarian: efek tetesan air. Keluar dari island besar dengan leher yang menyatu dan melepas, dengan pantulan halus di akhir.

@@ -424,23 +424,44 @@ class DynamicIslandModule : Module() {
         return sz
     }
 
-    /** Panel hasil pencarian: keluar dari bawah island yang sudah expand, tingginya dianimasikan dengan e */
+    /** Panel hasil pencarian: menetes keluar dari bawah island besar, terhubung lewat leher yang menyatu */
     private fun drawSearchPanel(ctx: GuiCanvas, full: LayoutBounds, e: Float, k: Float) {
         val results = Library.searchResults
         val rows = if (results.isNullOrEmpty()) 1 else min(results.size, 4)
-        val rects = IslandRects(full)
-        val box = rects.resultsRect(rows)
-        val clip = LayoutBounds(box.x, box.y, box.width, box.height * e)
-        if (clip.height < 1f) return
-        ctx.drawShape(clip, ShapeStyle(Color(0.02f, 0.02f, 0.03f, 0.9f), 18f, 1f, Color(1f, 1f, 1f, 0.07f)))
-        // hanya yang sudah "terbuka" yang terlihat: potong ke tinggi animasi
+        val box = IslandRects(full).resultsRect(rows)
+        val p = e.coerceIn(0f, 1f)
+        if (p <= 0.01f) return
+        val eased = easeOutBack(p)
+        val gap = box.y - full.bottom
+        // tetesan: lebar tumbuh dulu, tinggi melar dengan sedikit pantulan di akhir
+        val pw = box.width * (0.55f + 0.45f * eased.coerceIn(0f, 1.05f))
+        val ph = box.height * eased.coerceAtLeast(0f)
+        val top = box.y - (1f - p) * gap
+        val panel = LayoutBounds(box.x + (box.width - pw) / 2f, top, pw, ph)
+        val bg = Color(0.02f, 0.02f, 0.03f, 0.9f)
+
+        // leher: penghubung dari island besar ke tetesan, makin tipis saat tetesan terlepas
         ctx.noScissor()
-        ctx.scissor((clip.x * k).toInt(), (DangoClient.platform.windowHeight - (clip.y + clip.height) * k).toInt(),
-            (clip.width * k).toInt() + 1, (clip.height * k).toInt() + 1)
+        scissorTo(ctx, box.x, full.bottom, box.width, box.bottom + box.height * 0.2f - full.bottom, k)
+        if (p < 0.95f) {
+            val nw = box.width * 0.36f * (1f - p * 0.7f)
+            val neckH = top - full.bottom + 4f
+            if (nw > 1f && neckH > 0f) {
+                ctx.drawShape(LayoutBounds(box.x + (box.width - nw) / 2f, full.bottom - 2f, nw, neckH), ShapeStyle(bg, nw / 2f))
+            }
+        }
+        ctx.drawShape(panel, ShapeStyle(bg, islandLerp(min(ph / 2f, 26f), 18f, p), 1f, Color(1f, 1f, 1f, 0.07f)))
+
+        // isi muncul setelah tetesan hampir terbentuk
+        val alpha = ((p - 0.5f) / 0.5f).coerceIn(0f, 1f)
+        if (alpha <= 0f) return
+        ctx.pushOpacity(alpha)
+        val rects = IslandRects(full)
         val cx = box.x + box.width / 2f
         val cy = box.y + box.height / 2f - 0.39f * 11f
+        val query = IslandState.query
         when {
-            IslandState.query.isEmpty() -> centeredText(ctx, "Type a song, then press Enter", cx, cy, 11f, Theme.TEXT_TERTIARY)
+            query.isEmpty() -> centeredText(ctx, "Type a song, then press Enter", cx, cy, 11f, Theme.TEXT_TERTIARY)
             results == null -> centeredText(ctx, "Searching...", cx, cy, 11f, Theme.TEXT_TERTIARY)
             results.isEmpty() -> centeredText(ctx, "No results", cx, cy, 11f, Theme.TEXT_TERTIARY)
             else -> {
@@ -465,6 +486,20 @@ class DynamicIslandModule : Module() {
                 }
             }
         }
+        ctx.popOpacity()
+    }
+
+    /** kurva pantulan halus (overshoot sedikit di akhir), dipakai untuk tetesan */
+    private fun easeOutBack(x: Float): Float {
+        val c1 = 1.70158f
+        val c3 = c1 + 1f
+        val d = x - 1f
+        return 1f + c3 * d * d * d + c1 * d * d
+    }
+
+    /** batasi gambar ke area tertentu (koordinat logis, dikonversi ke piksel) */
+    private fun scissorTo(ctx: GuiCanvas, x: Float, y: Float, w: Float, h: Float, k: Float) {
+        ctx.scissor((x * k).toInt(), (DangoClient.platform.windowHeight - (y + h) * k).toInt(), (w * k).toInt() + 1, (h * k).toInt() + 1)
     }
 
     private fun glyphCentered(ctx: GuiCanvas, s: String, b: LayoutBounds, color: Color) {
