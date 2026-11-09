@@ -390,7 +390,7 @@ class DynamicIslandModule : Module() {
             // lompat langsung kalau jauh (lagu baru / seek), kalau dekat digulir halus
             lyricPos = if (kotlin.math.abs(target - lyricPos) > 3f) target else lyricPos + (target - lyricPos) * 0.22f
             val base = kotlin.math.floor(lyricPos).toInt()
-            for (j in base - 2..base + 2) {
+            for (j in base - 1..base + 1) {
                 if (j < 0 || j >= lines.size) continue
                 val dist = kotlin.math.abs(j - lyricPos).coerceAtMost(1f)
                 val font = if (dist < 0.5f) Theme.FONT_SEMIBOLD else Theme.FONT_REGULAR
@@ -398,7 +398,7 @@ class DynamicIslandModule : Module() {
                 // lirik panjang: font diperkecil dulu supaya muat, baru dipotong kalau sudah di ukuran minimum
                 val size = fitSize(lines[j].text, maxW, 12f + 2f * (1f - dist), font)
                 val col = Color(Theme.TEXT_PRIMARY.r, Theme.TEXT_PRIMARY.g, Theme.TEXT_PRIMARY.b, 1f - dist * 0.65f)
-                val y = lmid + (j - lyricPos) * 24f - 0.39f * size
+                val y = lmid + (j - lyricPos) * 19f - 0.39f * size
                 centeredText(ctx, trim(lines[j].text, maxW, size, font), lcx, y, size, col, font)
             }
         }
@@ -411,10 +411,10 @@ class DynamicIslandModule : Module() {
             if (typed.isEmpty()) Theme.TEXT_TERTIARY else Theme.TEXT_PRIMARY)
     }
 
-    /** kecilkan ukuran font sampai teks muat dalam maxW (minimal 10px) */
+    /** kecilkan ukuran font sampai teks muat dalam maxW (minimal 9px) */
     private fun fitSize(text: String, maxW: Float, size: Float, font: String): Float {
         var sz = size
-        while (sz > 10f && width(text, sz, font) > maxW) sz -= 0.5f
+        while (sz > 9f && width(text, sz, font) > maxW) sz -= 0.5f
         return sz
     }
 
@@ -436,14 +436,17 @@ class DynamicIslandModule : Module() {
 
         // leher: penghubung dari island besar ke tetesan, makin tipis saat tetesan terlepas
         ctx.noScissor()
-        scissorTo(ctx, box.x, full.bottom, box.width, box.bottom + box.height * 0.2f - full.bottom, k)
         if (p < 0.95f) {
             val nw = box.width * 0.36f * (1f - p * 0.7f)
             val neckH = top - full.bottom + 4f
             if (nw > 1f && neckH > 0f) {
-                ctx.drawShape(LayoutBounds(box.x + (box.width - nw) / 2f, full.bottom - 2f, nw, neckH), ShapeStyle(bg, nw / 2f))
+                val neck = LayoutBounds(box.x + (box.width - nw) / 2f, full.bottom - 2f, nw, neckH)
+                scissorTo(ctx, neck.x, neck.y, neck.width, neck.height, k)
+                ctx.drawShape(neck, ShapeStyle(bg, nw / 2f))
+                ctx.noScissor()
             }
         }
+        ctx.noScissor()
         val panelR = islandLerp(min(ph / 2f, 26f), 18f, p)
         if (glass.get()) ctx.drawGlass(panel, Theme.GLASS_WINDOW.copy(radius = panelR))
         else ctx.drawShape(panel, ShapeStyle(bg, panelR, 1f, Color(1f, 1f, 1f, 0.07f)))
@@ -452,6 +455,7 @@ class DynamicIslandModule : Module() {
         val alpha = ((p - 0.5f) / 0.5f).coerceIn(0f, 1f)
         if (alpha <= 0f) return
         ctx.pushOpacity(alpha)
+        scissorTo(ctx, panel.x, panel.y, panel.width, max(1f, panel.height), k)
         val rects = IslandRects(full)
         val cx = box.x + box.width / 2f
         val cy = box.y + box.height / 2f - 0.39f * 11f

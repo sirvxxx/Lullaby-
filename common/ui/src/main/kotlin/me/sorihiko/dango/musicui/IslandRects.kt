@@ -26,7 +26,7 @@ internal class IslandRects(b: LayoutBounds) {
     val next = btn(b.x + 0.32f * w)
 
     val volume = LayoutBounds(b.x + 0.40f * w, btnCy - 3f, 0.06f * w, 6f)
-    val lyrics = LayoutBounds(b.x + 0.52f * w, b.y + 0.12f * h, 0.44f * w, 0.6f * h)
+    val lyrics = LayoutBounds(b.x + 0.5f * w + 6f, b.y + 0.12f * h, 0.46f * w - 12f, 0.56f * h)
     val search = LayoutBounds(b.x + 0.52f * w, b.y + 0.8f * h, 0.44f * w, 0.14f * h)
 
     // panel hasil pencarian: tepat di bawah island yang sudah expand

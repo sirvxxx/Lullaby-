@@ -134,3 +134,8 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Panel hasil pencarian: frosted glass dengan tema yang sama.
 - Klik baris hasil: hanya menambah dan memutar lagu itu (tidak lagi mengganti antrean dengan semua hasil).
 - Ukuran panel besar dan panel hasil: 480x160 -> 420x138.
+- Panel hasil: area potong dipersempit ke panel itu sendiri (tidak ada kotak persegi di sekitar glass). Leher punya area potong sendiri.
+- Lirik: 3 baris (aktif di tengah), jarak 19px, kolom sedikit lebih lebar, font minimal 9px. Jarak ke search bar lebih lega.
+- Panel hasil: area potong dipersempit ke panel itu sendiri (tidak ada kotak persegi di sekitar glass). Leher punya area potong sendiri.
+- Lirik: 3 baris (aktif di tengah), jarak 19px, kolom sedikit lebih lebar, font minimal 9px. Jarak ke search bar lebih lega.
+- Panel hasil (glass): tidak lagi dipotong area persegi saat digambar, jadi blur tidak keluar dari bentuk panel yang membulat. Barisnya tetap dipotong ke panel.
