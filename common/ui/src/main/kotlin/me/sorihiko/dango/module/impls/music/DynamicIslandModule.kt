@@ -435,7 +435,7 @@ class DynamicIslandModule : Module() {
         ctx.drawShape(clip, ShapeStyle(Color(0.02f, 0.02f, 0.03f, 0.9f), 18f, 1f, Color(1f, 1f, 1f, 0.07f)))
         // hanya yang sudah "terbuka" yang terlihat: potong ke tinggi animasi
         ctx.noScissor()
-        ctx.scissor((clip.x * k).toInt(), (platform.windowHeight - (clip.y + clip.height) * k).toInt(),
+        ctx.scissor((clip.x * k).toInt(), (DangoClient.platform.windowHeight - (clip.y + clip.height) * k).toInt(),
             (clip.width * k).toInt() + 1, (clip.height * k).toInt() + 1)
         val cx = box.x + box.width / 2f
         val cy = box.y + box.height / 2f - 0.39f * 11f

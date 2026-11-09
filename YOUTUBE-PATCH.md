@@ -128,3 +128,4 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Pencarian di panel besar: klik search bar lalu ketik, Enter untuk mencari (tanpa keluar dari island). Hasil muncul sebagai panel baru di bawah island yang keluar dengan animasi. + menambah ke antrean, klik baris memutar lagu.
 - Hasil pencarian island: bisa digulir dengan roda mouse (lebih dari 4 hasil). Pencarian baru mengembalikan gulir ke atas.
 - Latar immersive panel besar: cover samar di belakang panel.
+- Perbaikan build: scrollIslandResults memakai Int (sesuai LayoutBounds.contains); drawSearchPanel memakai DangoClient.platform.

@@ -339,7 +339,7 @@ class MusicScreen(
 
     /** Dari island yang sudah expand: buka GUI penuh dengan kotak search aktif */
     /** roda mouse di panel hasil pencarian island: geser daftarnya */
-    private fun scrollIslandResults(lx: Float, ly: Float, wheel: Int): Boolean {
+    private fun scrollIslandResults(lx: Int, ly: Int, wheel: Int): Boolean {
         if (!islandOnly || !islandSearchActive) return false
         val results = Library.searchResults ?: return false
         val exp = IslandState.expandedRect(ui.lw, ui.lh) ?: return false
