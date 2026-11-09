@@ -142,3 +142,4 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Keybind island default: ` (grave, LWJGL2 41). Setting lama yang tersimpan (Alt) perlu diganti di Controls.
 - Kursor nyangkut: pill kecil + kursor diam 5 detik = layar tutup, walau status tombol masih tertekan.
 - Perbaikan macet di mode kursor: Esc / tombol buka sekarang benar-benar menutup layar island (cabang island mengabaikan penutupan sebelumnya, sehingga layar tidak pernah tertutup dan tombol lain tidak jalan).
+- Perbaikan build: islandLastMx/My bertipe Int (sesuai ui.mx/ui.my).

@@ -329,8 +329,8 @@ class MusicScreen(
     var islandOnly = false
     /** posisi animasi island: 0 = pill, 1 = panel penuh */
     private var islandExpanded = false
-    private var islandLastMx = -1f
-    private var islandLastMy = -1f
+    private var islandLastMx = -1
+    private var islandLastMy = -1
     private var islandIdleSince = 0L
     /** kotak search di panel besar sedang dipakai (hasil tampil di bawah) */
     private var islandSearchActive = false
