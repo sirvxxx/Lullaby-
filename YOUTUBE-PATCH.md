@@ -130,3 +130,7 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Latar immersive panel besar: cover samar di belakang panel.
 - Perbaikan build: scrollIslandResults memakai Int (sesuai LayoutBounds.contains); drawSearchPanel memakai DangoClient.platform.
 - Panel hasil pencarian: efek tetesan air. Keluar dari island besar dengan leher yang menyatu dan melepas, dengan pantulan halus di akhir.
+- Latar panel besar: wash cover dihapus, kembali frosted glass.
+- Panel hasil pencarian: frosted glass dengan tema yang sama.
+- Klik baris hasil: hanya menambah dan memutar lagu itu (tidak lagi mengganti antrean dengan semua hasil).
+- Ukuran panel besar dan panel hasil: 480x160 -> 420x138.

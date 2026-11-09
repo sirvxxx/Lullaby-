@@ -422,7 +422,10 @@ class MusicScreen(
                             if (row.y + row.height < box.y || row.y > box.bottom) continue
                             val track = results[i]
                             ui.hits += r.resultPlus(row) to { MusicPlayer.enqueueLast(track) }
-                            ui.hits += row to { MusicPlayer.playQueue(results, i) }
+                            ui.hits += row to {
+                                MusicPlayer.enqueueNext(track)
+                                MusicPlayer.next()
+                            }
                         }
                     }
                     // klik di luar panel yang terbuka: mengecilkan pill (paling akhir = prioritas terendah)

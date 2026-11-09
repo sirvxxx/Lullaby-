@@ -262,7 +262,7 @@ class DynamicIslandModule : Module() {
             IslandState.expandT += ((if (IslandState.expandTarget) 1f else 0f) - IslandState.expandT) * 0.2f
             IslandState.setPill(pill.x, pill.y, pill.width, pill.height, lw, lh)
             // ukuran island yang sudah expand (di tengah atas), dan keadaan animasinya
-            val full = LayoutBounds((lw - 480f) / 2f, top, 480f, 160f)
+            val full = LayoutBounds((lw - 420f) / 2f, top, 420f, 138f)
             IslandState.setExpanded(full.x, full.y, full.width, full.height, lw, lh)
             val e = IslandState.expandT.coerceIn(0f, 1f)
             val rect = LayoutBounds(
@@ -338,12 +338,6 @@ class DynamicIslandModule : Module() {
         ctx.drawShape(LayoutBounds(b.x + b.width * 0.5f, b.y + 16f, 1f, b.height - 32f), ShapeStyle(Color(1f, 1f, 1f, 0.12f), 0.5f))
 
         CoverCache.upload()
-        // latar immersive: cover samar di belakang panel
-        CoverCache.trackRounded(t, 0.12f)?.let {
-            ctx.pushOpacity(0.2f)
-            ctx.drawImage(LayoutBounds(b.x + 4f, b.y + 4f, b.width - 8f, b.height - 8f), it)
-            ctx.popOpacity()
-        }
         CoverCache.trackRounded(t, 0.2f)?.let { ctx.drawImage(r.cover, it) }
 
         // jam dan judul di garis y yang sama
@@ -450,7 +444,9 @@ class DynamicIslandModule : Module() {
                 ctx.drawShape(LayoutBounds(box.x + (box.width - nw) / 2f, full.bottom - 2f, nw, neckH), ShapeStyle(bg, nw / 2f))
             }
         }
-        ctx.drawShape(panel, ShapeStyle(bg, islandLerp(min(ph / 2f, 26f), 18f, p), 1f, Color(1f, 1f, 1f, 0.07f)))
+        val panelR = islandLerp(min(ph / 2f, 26f), 18f, p)
+        if (glass.get()) ctx.drawGlass(panel, Theme.GLASS_WINDOW.copy(radius = panelR))
+        else ctx.drawShape(panel, ShapeStyle(bg, panelR, 1f, Color(1f, 1f, 1f, 0.07f)))
 
         // isi muncul setelah tetesan hampir terbentuk
         val alpha = ((p - 0.5f) / 0.5f).coerceIn(0f, 1f)
