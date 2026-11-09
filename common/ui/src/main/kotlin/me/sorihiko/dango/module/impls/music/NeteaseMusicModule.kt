@@ -116,7 +116,7 @@ class NeteaseMusicModule : Module() {
     @ModuleValue("Toggle lyrics", "Hotkey to turn lyrics on or off")
     private val keyLyrics = IntValue(-100, 255, 0)
     /** tombol untuk mengaktifkan / menutup island (bisa diganti di menu Controls) */
-    private val keyIsland = IntValue(-100, 255, Keys.LEFT_ALT)
+    private val keyIsland = IntValue(-100, 255, 41)   // grave / backtick
 
     @ModuleValue("Volume normalization", "Keep songs at a similar loudness")
     private val normalize = BooleanValue(true)

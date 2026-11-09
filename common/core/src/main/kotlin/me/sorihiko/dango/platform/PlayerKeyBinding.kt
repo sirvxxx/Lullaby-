@@ -8,7 +8,7 @@ import java.nio.file.Path
 enum class PlayerAction(val id: String, val defaultKey: Int = Keys.NONE) {
     OPEN("open_player", Keys.M), PAUSE("play_pause"), PREVIOUS("previous"), NEXT("next"),
     VOLUME_UP("volume_up"), VOLUME_DOWN("volume_down"), LYRICS("toggle_lyrics"),
-    ISLAND("island_toggle", Keys.LEFT_ALT);
+    ISLAND("island_toggle", 41);   // 41 = grave / backtick (LWJGL2 KEY_GRAVE)
 
     val translationKey: String get() = "key.lullaby.$id"
 }

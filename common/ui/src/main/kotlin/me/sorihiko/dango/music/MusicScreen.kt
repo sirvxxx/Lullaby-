@@ -329,6 +329,9 @@ class MusicScreen(
     var islandOnly = false
     /** posisi animasi island: 0 = pill, 1 = panel penuh */
     private var islandExpanded = false
+    private var islandLastMx = -1f
+    private var islandLastMy = -1f
+    private var islandIdleSince = 0L
     /** kotak search di panel besar sedang dipakai (hasil tampil di bawah) */
     private var islandSearchActive = false
 
@@ -378,6 +381,18 @@ class MusicScreen(
         if (!islandOnly) IslandState.open = false
         if (islandOnly) {
             IslandState.lastFrame = System.currentTimeMillis()
+            // Esc / tombol buka (keyTyped -> close()) harus benar-benar menutup layar island.
+            // Sebelumnya cabang ini mengabaikan closingAt, sehingga layar macet dan tombol lain tidak jalan.
+            if (closingAt != 0L || closed) {
+                IslandState.open = false
+                IslandState.expandTarget = false
+                islandExpanded = false
+                islandSearchActive = false
+                sidebar.searchFocused = false
+                closed = true
+                closeScreen()
+                return
+            }
             IslandState.expandTarget = islandExpanded
             IslandState.query = sidebar.searchText
             // panel pencarian hanya hidup selama island terbuka
@@ -386,8 +401,16 @@ class MusicScreen(
                 sidebar.searchFocused = false
             }
             IslandState.searchTarget = islandSearchActive && islandExpanded
-            // pill kecil dan Alt dilepas: tutup seketika (kursor langsung hilang)
-            if (!islandExpanded && !IslandState.altHeld) {
+            // pengaman: pill kecil dan kursor diam 5 detik = tutup, walau status tombol masih "tertekan"
+            val now = System.currentTimeMillis()
+            if (ui.mx != islandLastMx || ui.my != islandLastMy || islandIdleSince == 0L) {
+                islandLastMx = ui.mx
+                islandLastMy = ui.my
+                islandIdleSince = now
+            }
+            val idleTooLong = now - islandIdleSince > 5000L
+            // pill kecil dan Alt dilepas (atau pengaman di atas): tutup seketika, kursor langsung hilang
+            if (!islandExpanded && (!IslandState.altHeld || idleTooLong)) {
                 IslandState.open = false
                 closed = true
                 closeScreen()

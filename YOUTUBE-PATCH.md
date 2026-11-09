@@ -139,3 +139,6 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Panel hasil: area potong dipersempit ke panel itu sendiri (tidak ada kotak persegi di sekitar glass). Leher punya area potong sendiri.
 - Lirik: 3 baris (aktif di tengah), jarak 19px, kolom sedikit lebih lebar, font minimal 9px. Jarak ke search bar lebih lega.
 - Panel hasil (glass): tidak lagi dipotong area persegi saat digambar, jadi blur tidak keluar dari bentuk panel yang membulat. Barisnya tetap dipotong ke panel.
+- Keybind island default: ` (grave, LWJGL2 41). Setting lama yang tersimpan (Alt) perlu diganti di Controls.
+- Kursor nyangkut: pill kecil + kursor diam 5 detik = layar tutup, walau status tombol masih tertekan.
+- Perbaikan macet di mode kursor: Esc / tombol buka sekarang benar-benar menutup layar island (cabang island mengabaikan penutupan sebelumnya, sehingga layar tidak pernah tertutup dan tombol lain tidak jalan).
