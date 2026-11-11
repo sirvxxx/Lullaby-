@@ -61,6 +61,7 @@ class MusicScreen(
     private val artistPage = ArtistPage(this)
     private val party = PartyPage(this)
     private val settings = SettingsPage(this, module)
+    private val lyricsWidgets = me.sorihiko.dango.musicui.LyricsWidgetPage(this)
     internal val trackGrid = TrackCardGrid(this)
     internal val nowPlaying = NowPlayingPage(this)
     internal val queuePage = QueuePage(this)
@@ -301,6 +302,7 @@ class MusicScreen(
         settings.commitEdit()
         blurTextFields()
         settings.bindingKey = null
+        me.sorihiko.dango.musicui.KeyCapture.target = null
         if (ScreenState.page == Page.SETTINGS) {
             ScreenState.page = ScreenState.settingsBack
         } else {
@@ -741,7 +743,7 @@ class MusicScreen(
                 drawAccountBar(body, hiddenCount)
             }
             Page.PARTY -> ui.itemAnim(0) { party.draw(LayoutBounds(body.x, body.y, body.width, body.height - ui.bottomInset)) }
-            Page.SETTINGS -> settings.draw(body)
+            Page.SETTINGS -> if (me.sorihiko.dango.musicui.WIDGET_LYRICS_TAB) lyricsWidgets.draw(body) else settings.draw(body)
             Page.ARTIST -> artistPage.draw(body)
             else -> tracks.draw(body)
         }
@@ -824,6 +826,7 @@ class MusicScreen(
             nowPlaying.queueArea.contains(lx, ly) -> nowPlaying.scrollQueue(wheel)
             nowPlaying.lyricArea.contains(lx, ly) -> nowPlaying.scrollLyric(wheel)
             scrollIslandResults(lx, ly, wheel) -> {}
+            lyricsWidgets.area.contains(lx, ly) -> lyricsWidgets.scroll(wheel)
             queuePage.area.contains(lx, ly) -> queuePage.scroll(wheel)
             trackGrid.area.contains(lx, ly) -> trackGrid.scroll(wheel)
             grid.area.contains(lx, ly) -> grid.scroll(wheel)
@@ -845,6 +848,7 @@ class MusicScreen(
             return
         }
         // 正在输入 / 录按键的地方先拿走按键
+        if (me.sorihiko.dango.musicui.KeyCapture.keyTyped(keyCode)) return
         if (settings.keyTyped(typedChar, keyCode)) return
         if (sidebar.keyTyped(typedChar, keyCode)) return
         if (party.keyTyped(typedChar, keyCode)) return

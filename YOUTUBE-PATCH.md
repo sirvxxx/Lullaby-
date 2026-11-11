@@ -143,3 +143,7 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Kursor nyangkut: pill kecil + kursor diam 5 detik = layar tutup, walau status tombol masih tertekan.
 - Perbaikan macet di mode kursor: Esc / tombol buka sekarang benar-benar menutup layar island (cabang island mengabaikan penutupan sebelumnya, sehingga layar tidak pernah tertutup dan tombol lain tidak jalan).
 - Perbaikan build: islandLastMx/My bertipe Int (sesuai ui.mx/ui.my).
+- Tahap 1 model widget: ModelWidgets.kt (Widget, Section, TabbedPanel, ToggleRow, ChoiceRow, SliderRow, ButtonRow). Gaya Liquid Glass Lullaby. Belum dipasang ke SettingsPage (Tahap 2).
+- Tahap 2 (jembatan): ValueWidgets.kt, membuat ToggleRow/SliderRow/ChoiceRow dari BooleanValue/IntValue/FloatValue yang sudah ada. Penyimpanan nilai tidak berubah. SettingsPage belum diganti.
+- Langkah A (tab Lyrics berbasis widget): LyricsWidgetPage.kt, dengan flag WIDGET_LYRICS_TAB = false (default mati, halaman lama tetap jalan). Saat flag dinyalakan, Settings menampilkan hanya tab Lyrics versi widget (toggle & slider). Warna, font, tombol, bahasa, dan tab Music & HUD belum ada di versi ini.
+- Langkah B1: perekaman keybind lewat KeyCapture (keyboard, Esc batal, Backspace/Delete kosong). KeyRow + section "Tombol" di halaman widget (flag). Keybind mouse belum.
