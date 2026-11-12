@@ -137,6 +137,7 @@ internal object McCompat {
         val savedProjectionType = RenderSystem.getProjectionType()
         try {
             bindFramebuffer(GL30.GL_FRAMEBUFFER, mainFramebuffer())
+            OffscreenGl.ensureSize(mc.window.width, mc.window.height)
             Gl.viewport(0, 0, mc.window.width, mc.window.height)
             Gl.scissor(false)
             Gl.colorMask(true, true, true, true)
@@ -218,7 +219,7 @@ internal object McCompat {
                 return true
             }
             // Vulkan：试着自己开一个看不见的 OpenGL 环境
-            offscreenGl = OffscreenGl.create()
+            offscreenGl = OffscreenGl.create(net.minecraft.client.Minecraft.getInstance().window.width, net.minecraft.client.Minecraft.getInstance().window.height)
             if (!offscreenGl) DangoLogger.warn("Dango Music: graphics backend is {} and no OpenGL is available, lyrics and the player screen are disabled", backend.javaClass.name)
             glChecked = offscreenGl
             return offscreenGl
@@ -648,8 +649,19 @@ internal object McCompat {
  */
 internal object OffscreenGl {
     private var window = 0L
+    private var curW = 0
+    private var curH = 0
 
-    fun create(): Boolean {
+    /** samakan ukuran jendela offscreen dengan layar game (dipanggil tiap frame; murah kalau tidak berubah) */
+    fun ensureSize(width: Int, height: Int) {
+        if (window == 0L || width <= 0 || height <= 0) return
+        if (width == curW && height == curH) return
+        org.lwjgl.sdl.SDLVideo.SDL_SetWindowSize(window, width, height)
+        curW = width
+        curH = height
+    }
+
+    fun create(width: Int, height: Int): Boolean {
         if (window != 0L) return true
         return try {
             org.lwjgl.sdl.SDLVideo.SDL_GL_ResetAttributes()
@@ -657,7 +669,7 @@ internal object OffscreenGl {
             org.lwjgl.sdl.SDLVideo.SDL_GL_SetAttribute(org.lwjgl.sdl.SDLVideo.SDL_GL_CONTEXT_MINOR_VERSION, 3)
             org.lwjgl.sdl.SDLVideo.SDL_GL_SetAttribute(org.lwjgl.sdl.SDLVideo.SDL_GL_CONTEXT_PROFILE_MASK, org.lwjgl.sdl.SDLVideo.SDL_GL_CONTEXT_PROFILE_CORE)
             org.lwjgl.sdl.SDLVideo.SDL_GL_SetAttribute(org.lwjgl.sdl.SDLVideo.SDL_GL_CONTEXT_FLAGS, org.lwjgl.sdl.SDLVideo.SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG)
-            val w = org.lwjgl.sdl.SDLVideo.SDL_CreateWindow("Dango Music (offscreen)", 16, 16,
+            val w = org.lwjgl.sdl.SDLVideo.SDL_CreateWindow("Dango Music (offscreen)", width, height,
                 org.lwjgl.sdl.SDLVideo.SDL_WINDOW_OPENGL or org.lwjgl.sdl.SDLVideo.SDL_WINDOW_HIDDEN)
             if (w == 0L) {
                 DangoLogger.warn("Dango Music: cannot create an offscreen OpenGL window: {}", org.lwjgl.sdl.SDLError.SDL_GetError() ?: "?")
@@ -672,6 +684,8 @@ internal object OffscreenGl {
             org.lwjgl.sdl.SDLVideo.SDL_GL_MakeCurrent(w, context)
             GL.createCapabilities()
             window = w
+            curW = width
+            curH = height
             DangoLogger.info("Dango Music: drawing through an offscreen OpenGL context on Vulkan: {} / {}",
                 GL11.glGetString(GL11.GL_RENDERER) ?: "?", GL11.glGetString(GL11.GL_VERSION) ?: "?")
             true

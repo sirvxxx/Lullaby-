@@ -144,3 +144,4 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Perbaikan macet di mode kursor: Esc / tombol buka sekarang benar-benar menutup layar island (cabang island mengabaikan penutupan sebelumnya, sehingga layar tidak pernah tertutup dan tombol lain tidak jalan).
 - Perbaikan build: islandLastMx/My bertipe Int (sesuai ui.mx/ui.my).
 - Dikembalikan ke v38 (stuck-fix). Ditambah workflow CI build-26.3-fabric.yml. Target 26.2 dan 26.3 tetap aktif.
+- Perbaikan layar kecil di 26.3: konteks OpenGL offscreen dibuat 16x16 dan tidak pernah diubah ukurannya, sehingga gambar hanya tampil di pojok kiri atas. Sekarang ukurannya mengikuti layar game dan diperbarui tiap frame (mc26.3 McCompat.kt). 26.1.2 belum diubah.
