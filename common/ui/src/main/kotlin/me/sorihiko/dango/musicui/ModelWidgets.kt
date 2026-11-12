@@ -141,31 +141,6 @@ internal class ChoiceRow(
     }
 }
 
-/** Baris slider nilai 0..1 (klik di bar untuk mengatur) */
-internal class SliderRow(
-    private val label: String,
-    private val get: () -> Float,
-    private val set: (Float) -> Unit,
-    private val fmt: (Float) -> String,
-) : Widget() {
-    override fun measure(width: Float): Float = ROW_H
-
-    override fun render(ui: Ui) {
-        val b = bounds
-        if (ui.hover(b)) ui.card(b, Theme.CARD_HOVER, 10f)
-        ui.text(label, b.x + 8f, b.y + ROW_H / 2f - 0.39f * 12f, 12f, Theme.TEXT_PRIMARY, Theme.FONT_SEMIBOLD)
-        val track = LayoutBounds(b.right - 150f, b.y + ROW_H / 2f - 3f, 110f, 6f)
-        val v = get().coerceIn(0f, 1f)
-        ui.card(track, Theme.TRACK, 3f)
-        ui.card(LayoutBounds(track.x, track.y, max(3f, track.width * v), track.height), Theme.TEXT_PRIMARY, 3f)
-        ui.card(LayoutBounds(track.x + track.width * v - 5f, track.y - 2f, 10f, 10f), Theme.TEXT_PRIMARY, 5f)
-        ui.text(fmt(v), track.x - 44f, b.y + ROW_H / 2f - 0.39f * 11f, 11f, Theme.TEXT_SECONDARY)
-        ui.hits += LayoutBounds(track.x, track.y - 8f, track.width, track.height + 16f) to {
-            set(((ui.mx - track.x) / track.width).coerceIn(0f, 1f))
-        }
-    }
-}
-
 /** Tombol satu baris */
 internal class ButtonRow(private val label: String, private val action: () -> Unit) : Widget() {
     override fun measure(width: Float): Float = ROW_H + 4f

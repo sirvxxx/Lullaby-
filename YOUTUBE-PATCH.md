@@ -151,3 +151,4 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - 26.3: target 26.3-fabric sudah ada di settings.gradle.kts dan mc26.3 compat sudah ada. Ditambah workflow CI build-26.3-fabric.yml.
 - GUI gaya LyricsFlow: rail tab di kiri (Lyrics, Controls, Advanced), judul + subjudul, label section kapital, kartu glass dengan garis pemisah, toggle pill, segmen, dan slider dengan nilai di kanan. Warna dan glass tetap dari Theme Lullaby.
 - Belum ada: tab Playing, Style, Sky, Cosmetics, Display, Performance, Extra (datanya belum dipetakan). Segmen (SegmentRow) sudah dibuat tapi belum dipakai di tab mana pun.
+- Perbaikan build: SliderRow lama (ModelWidgets.kt) dihapus. Versi baru di SettingsLayout.kt dipakai juga oleh ValueWidgets (konstruktor sama).
