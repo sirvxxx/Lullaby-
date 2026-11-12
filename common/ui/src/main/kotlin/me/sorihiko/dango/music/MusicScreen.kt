@@ -743,7 +743,14 @@ class MusicScreen(
                 drawAccountBar(body, hiddenCount)
             }
             Page.PARTY -> ui.itemAnim(0) { party.draw(LayoutBounds(body.x, body.y, body.width, body.height - ui.bottomInset)) }
-            Page.SETTINGS -> if (me.sorihiko.dango.musicui.WIDGET_LYRICS_TAB) lyricsWidgets.draw(body) else settings.draw(body)
+            Page.SETTINGS -> when {
+                !me.sorihiko.dango.musicui.WIDGET_LYRICS_TAB -> settings.draw(body)
+                lyricsWidgets.legacy -> {
+                    lyricsWidgets.drawBackButton(body)   // tombol kembali didaftarkan dulu, jadi menang atas halaman lama
+                    settings.draw(body)
+                }
+                else -> lyricsWidgets.draw(body)
+            }
             Page.ARTIST -> artistPage.draw(body)
             else -> tracks.draw(body)
         }

@@ -147,3 +147,7 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Tahap 2 (jembatan): ValueWidgets.kt, membuat ToggleRow/SliderRow/ChoiceRow dari BooleanValue/IntValue/FloatValue yang sudah ada. Penyimpanan nilai tidak berubah. SettingsPage belum diganti.
 - Langkah A (tab Lyrics berbasis widget): LyricsWidgetPage.kt, dengan flag WIDGET_LYRICS_TAB = false (default mati, halaman lama tetap jalan). Saat flag dinyalakan, Settings menampilkan hanya tab Lyrics versi widget (toggle & slider). Warna, font, tombol, bahasa, dan tab Music & HUD belum ada di versi ini.
 - Langkah B1: perekaman keybind lewat KeyCapture (keyboard, Esc batal, Backspace/Delete kosong). KeyRow + section "Tombol" di halaman widget (flag). Keybind mouse belum.
+- GUI: halaman Settings baru (Lyrics + Tombol) sekarang default. Tombol "Music & HUD, warna, font, bahasa" membuka halaman lama, dengan tombol kembali.
+- 26.3: target 26.3-fabric sudah ada di settings.gradle.kts dan mc26.3 compat sudah ada. Ditambah workflow CI build-26.3-fabric.yml.
+- GUI gaya LyricsFlow: rail tab di kiri (Lyrics, Controls, Advanced), judul + subjudul, label section kapital, kartu glass dengan garis pemisah, toggle pill, segmen, dan slider dengan nilai di kanan. Warna dan glass tetap dari Theme Lullaby.
+- Belum ada: tab Playing, Style, Sky, Cosmetics, Display, Performance, Extra (datanya belum dipetakan). Segmen (SegmentRow) sudah dibuat tapi belum dipakai di tab mana pun.
