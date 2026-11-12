@@ -143,14 +143,4 @@ Build: push ke GitHub -> Actions -> artifact "DangoMusic-26.2-fabric".
 - Kursor nyangkut: pill kecil + kursor diam 5 detik = layar tutup, walau status tombol masih tertekan.
 - Perbaikan macet di mode kursor: Esc / tombol buka sekarang benar-benar menutup layar island (cabang island mengabaikan penutupan sebelumnya, sehingga layar tidak pernah tertutup dan tombol lain tidak jalan).
 - Perbaikan build: islandLastMx/My bertipe Int (sesuai ui.mx/ui.my).
-- Tahap 1 model widget: ModelWidgets.kt (Widget, Section, TabbedPanel, ToggleRow, ChoiceRow, SliderRow, ButtonRow). Gaya Liquid Glass Lullaby. Belum dipasang ke SettingsPage (Tahap 2).
-- Tahap 2 (jembatan): ValueWidgets.kt, membuat ToggleRow/SliderRow/ChoiceRow dari BooleanValue/IntValue/FloatValue yang sudah ada. Penyimpanan nilai tidak berubah. SettingsPage belum diganti.
-- Langkah A (tab Lyrics berbasis widget): LyricsWidgetPage.kt, dengan flag WIDGET_LYRICS_TAB = false (default mati, halaman lama tetap jalan). Saat flag dinyalakan, Settings menampilkan hanya tab Lyrics versi widget (toggle & slider). Warna, font, tombol, bahasa, dan tab Music & HUD belum ada di versi ini.
-- Langkah B1: perekaman keybind lewat KeyCapture (keyboard, Esc batal, Backspace/Delete kosong). KeyRow + section "Tombol" di halaman widget (flag). Keybind mouse belum.
-- GUI: halaman Settings baru (Lyrics + Tombol) sekarang default. Tombol "Music & HUD, warna, font, bahasa" membuka halaman lama, dengan tombol kembali.
-- 26.3: target 26.3-fabric sudah ada di settings.gradle.kts dan mc26.3 compat sudah ada. Ditambah workflow CI build-26.3-fabric.yml.
-- GUI gaya LyricsFlow: rail tab di kiri (Lyrics, Controls, Advanced), judul + subjudul, label section kapital, kartu glass dengan garis pemisah, toggle pill, segmen, dan slider dengan nilai di kanan. Warna dan glass tetap dari Theme Lullaby.
-- Belum ada: tab Playing, Style, Sky, Cosmetics, Display, Performance, Extra (datanya belum dipetakan). Segmen (SegmentRow) sudah dibuat tapi belum dipakai di tab mana pun.
-- Perbaikan build: SliderRow lama (ModelWidgets.kt) dihapus. Versi baru di SettingsLayout.kt dipakai juga oleh ValueWidgets (konstruktor sama).
-- Perbaikan layar mengecil: scissor dari panel hasil pencarian tidak dibersihkan dan terbawa ke sisa frame, sehingga seluruh tampilan terpotong di pojok kiri atas. Sekarang dibersihkan di akhir drawSearchPanel dan setelah pemanggilnya.
-- Target 26.2 dihapus (settings + folder versi + workflow). Target aktif: 26.3-fabric dan 26.3-neoforge, plus 26.1.2.
+- Dikembalikan ke v38 (stuck-fix). Ditambah workflow CI build-26.3-fabric.yml. Target 26.2 dan 26.3 tetap aktif.
