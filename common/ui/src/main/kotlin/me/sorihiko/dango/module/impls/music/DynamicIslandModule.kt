@@ -306,6 +306,7 @@ class DynamicIslandModule : Module() {
                 ctx.pushOpacity(expandAlpha)
                 drawExpanded(ctx, full)
                 if (IslandState.searchT > 0.01f) drawSearchPanel(ctx, full, IslandState.searchT, k)
+                ctx.noScissor()
                 ctx.popOpacity()
             }
             ctx.popTransform()
@@ -487,6 +488,7 @@ class DynamicIslandModule : Module() {
             }
         }
         ctx.popOpacity()
+        ctx.noScissor()   // jangan bawa area potong ke sisa frame (itu yang bikin layar mengecil)
     }
 
     /** kurva pantulan halus (overshoot sedikit di akhir), dipakai untuk tetesan */
